@@ -37,11 +37,19 @@ def add_menu_item():
         db.session.commit()
     return jsonify({'message': 'Menu item added successfully'})
 
-# 路由: 获取所有订单
+# 路由: 添加订单
 @app.route('/orders', methods=['POST'])
 def add_order():
     data = request.get_json()
-    new_order = Order(user=data['user'], timestamp=data['timestamp'], total=data['total'], items=json.dumps(data['items']))
+    new_order = Order(
+        user=data['user'], 
+        timestamp=data['timestamp'], 
+        total=data['total'], 
+        items=json.dumps(data['items']),
+        isSubmitted=data.get('isSubmitted', False),  # 从请求体中获取这些字段的值，如果不存在则默认为 False
+        isConfirmed=data.get('isConfirmed', False),
+        isCompleted=data.get('isCompleted', False)
+    )
     with app.app_context():
         db.session.add(new_order)
         db.session.commit()
@@ -96,7 +104,7 @@ def complete_order_item():
         if order:
             items = json.loads(order.items)
             if item_name in items:
-                items[item_name]['status'] = 'completed'
+                items[item_name]['isPrepared'] = True
                 order.items = json.dumps(items)
                 db.session.commit()
                 return jsonify({'message': 'Order item completed successfully'})

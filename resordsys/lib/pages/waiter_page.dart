@@ -2,43 +2,44 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-class CustomerPage extends StatefulWidget {
+class WaiterPage extends StatefulWidget {
   @override
-  _CustomerPageState createState() => _CustomerPageState();
+  _WaiterPageState createState() => _WaiterPageState();
 }
 
-class _CustomerPageState extends State<CustomerPage> {
-  List<dynamic> menuItems = [];
-  TextEditingController nameController = TextEditingController();
-  TextEditingController priceController = TextEditingController();
+class _WaiterPageState extends State<WaiterPage> {
+  List<dynamic> orders = [];
 
   @override
   void initState() {
     super.initState();
-    fetchMenu();
+    fetchOrders();
   }
 
-  Future<void> fetchMenu() async {
-    final response = await http.get(Uri.parse('http://localhost:5000/menu'));
+  Future<void> fetchOrders() async {
+    final response =
+        await http.get(Uri.parse('http://localhost:5000/orders/submitted'));
     if (response.statusCode == 200) {
+      // print('Orders: ${response.body}');
       setState(() {
-        menuItems = jsonDecode(response.body);
+        orders = jsonDecode(response.body);
       });
     } else {
-      print('Failed to fetch menu items');
+      print('Failed to fetch orders');
     }
   }
 
-  Future<void> addMenuItem(String name, double price) async {
+  Future<void> confirmOrder(int id) async {
+    print('Order ID: $id');
     final response = await http.post(
-      Uri.parse('http://localhost:5000/menu'),
+      Uri.parse('http://localhost:5000/orders/confirm'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'name': name, 'price': price}),
+      body: jsonEncode({'id': id}),
     );
     if (response.statusCode == 200) {
-      fetchMenu();
+      fetchOrders();
     } else {
-      print('Failed to add menu item');
+      print('Failed to confirm order');
     }
   }
 
@@ -46,59 +47,34 @@ class _CustomerPageState extends State<CustomerPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('海底世界海景餐厅点餐系统'),
+        title: Text('Waiter Page'),
       ),
       body: ListView.builder(
-        itemCount: menuItems.length,
+        itemCount: orders.length,
         itemBuilder: (ctx, index) {
-          final menuItem = menuItems[index];
-          return ListTile(
-            title: Text(menuItem['name']),
-            subtitle: Text('\$${menuItem['price']}'),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: Text('Add Menu Item'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    decoration: InputDecoration(labelText: 'Name'),
-                    controller: nameController,
-                  ),
-                  TextField(
-                    decoration: InputDecoration(labelText: 'Price'),
-                    keyboardType: TextInputType.number,
-                    controller: priceController,
-                  ),
-                ],
+          final order = orders[index];
+          return ExpansionTile(
+            title: Text('Order ${order['id']}'),
+            children: [
+              ...(order['items'] as Map<String, dynamic>).entries.map((item) {
+                return ListTile(
+                  title: Text(item.key),
+                  subtitle:
+                      Text('${item.value['count']} x \$${item.value['price']}'),
+                  trailing: Text(item.value['status'] == 'completed'
+                      ? 'Completed'
+                      : 'Pending'),
+                );
+              }).toList(),
+              ElevatedButton(
+                onPressed: () => confirmOrder(order['id']),
+                child: Text('Confirm Order'),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    String name = nameController.text;
-                    double price = double.parse(priceController.text);
-                    addMenuItem(name, price);
-                    Navigator.of(context).pop();
-                  },
-                  child: Text('Add'),
-                ),
-              ],
-            ),
+              Text(
+                  'Status: ${order['isSubmitted'] ? 'Submitted' : 'Not submitted'} / ${order['isConfirmed'] ? 'Confirmed' : 'Not confirmed'} / ${order['isCompleted'] ? 'Completed' : 'Not completed'}'),
+            ],
           );
         },
-        child: Icon(Icons.add),
       ),
     );
   }

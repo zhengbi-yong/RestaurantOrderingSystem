@@ -22,14 +22,19 @@ class Order(db.Model):
     user = db.Column(db.String(100), nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False)
     total = db.Column(db.Float, nullable=False)
-    items = db.Column(db.String(5000), nullable=False)  # 我们将把菜品信息保存为字符串
+    isSubmitted = db.Column(db.Boolean, default=False)  # 新增字段，表示订单是否已提交
+    isConfirmed = db.Column(db.Boolean, default=False)  # 新增字段，表示订单是否已确认
+    isCompleted = db.Column(db.Boolean, default=False)  # 新增字段，表示订单是否已完成
+    items = db.Column(db.String(5000), nullable=False)  # 我们将把菜品信息保存为字符串，其中每个菜品也有一个状态字段表示是否已完成
 
     def serialize(self):
-        print(self.items)
-        print(json.loads(self.items))
         return {
+            'id': self.id,
             'user': self.user,
             'timestamp': self.timestamp.isoformat(),
             'total': self.total,
+            'isSubmitted': self.isSubmitted,
+            'isConfirmed': self.isConfirmed,
+            'isCompleted': self.isCompleted,
             'items': json.loads(self.items)
         }

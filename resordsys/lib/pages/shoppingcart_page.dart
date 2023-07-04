@@ -81,10 +81,15 @@ class ShoppingCartPage extends StatelessWidget {
       'user': 'customer', // 或者其他用户身份
       'timestamp': DateTime.now().toIso8601String(),
       'total': total,
+      'isSubmitted': true, // 订单已经被提交
+      'isConfirmed': false, // 订单尚未被确认
+      'isCompleted': false, // 订单尚未完成
       'items': orderItems.map((name, count) => MapEntry(name, {
             'count': count,
             'price':
-                menuItems.firstWhere((item) => item['name'] == name)['price']
+                menuItems.firstWhere((item) => item['name'] == name)['price'],
+            'isPrepared': false, // 菜品尚未被准备
+            'isServed': false, // 菜品尚未上桌
           }))
     };
 

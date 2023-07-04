@@ -4,6 +4,8 @@ import 'dart:convert';
 import '../main.dart';
 import 'customer_page.dart';
 import 'boss_page.dart';
+import 'waiter_page.dart';
+import 'chef_page.dart';
 
 class IdentityPage extends StatelessWidget {
   @override
@@ -26,12 +28,16 @@ class IdentityPage extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 // 导航到厨师页面
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => ChefPage()));
               },
               child: Text('厨师'),
             ),
             ElevatedButton(
               onPressed: () {
                 // 导航到服务员页面
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => WaiterPage()));
               },
               child: Text('服务员'),
             ),

@@ -19,7 +19,7 @@ class _BossPageState extends State<BossPage> {
 
   Future<void> fetchOrders() async {
     final response = await http.get(Uri.parse('http://localhost:5000/orders'));
-    print(response.body);
+    // print(response.body);
     if (response.statusCode == 200) {
       setState(() {
         orders = jsonDecode(response.body);

@@ -2,43 +2,40 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-class CustomerPage extends StatefulWidget {
+class ChefPage extends StatefulWidget {
   @override
-  _CustomerPageState createState() => _CustomerPageState();
+  _ChefPageState createState() => _ChefPageState();
 }
 
-class _CustomerPageState extends State<CustomerPage> {
-  List<dynamic> menuItems = [];
-  TextEditingController nameController = TextEditingController();
-  TextEditingController priceController = TextEditingController();
+class _ChefPageState extends State<ChefPage> {
+  late Future<List> futureOrders;
 
   @override
   void initState() {
     super.initState();
-    fetchMenu();
+    futureOrders = fetchOrders();
   }
 
-  Future<void> fetchMenu() async {
-    final response = await http.get(Uri.parse('http://localhost:5000/menu'));
+  Future<List> fetchOrders() async {
+    final response =
+        await http.get(Uri.parse('http://localhost:5000/orders/confirmed'));
     if (response.statusCode == 200) {
-      setState(() {
-        menuItems = jsonDecode(response.body);
-      });
+      // print(response.body);
+      return json.decode(response.body);
     } else {
-      print('Failed to fetch menu items');
+      throw Exception('Failed to load orders');
     }
   }
 
-  Future<void> addMenuItem(String name, double price) async {
+  Future<void> completeOrderItem(int orderId, String itemName) async {
     final response = await http.post(
-      Uri.parse('http://localhost:5000/menu'),
+      Uri.parse('http://localhost:5000/orders/complete_item'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'name': name, 'price': price}),
+      body: jsonEncode({'orderId': orderId, 'itemName': itemName}),
     );
-    if (response.statusCode == 200) {
-      fetchMenu();
-    } else {
-      print('Failed to add menu item');
+    print('Server response: ${response.body}'); // 新添加的打印语句
+    if (response.statusCode != 200) {
+      throw Exception('Failed to complete order item');
     }
   }
 
@@ -46,59 +43,53 @@ class _CustomerPageState extends State<CustomerPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('海底世界海景餐厅点餐系统'),
+        title: Text('Chef Page'),
       ),
-      body: ListView.builder(
-        itemCount: menuItems.length,
-        itemBuilder: (ctx, index) {
-          final menuItem = menuItems[index];
-          return ListTile(
-            title: Text(menuItem['name']),
-            subtitle: Text('\$${menuItem['price']}'),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: Text('Add Menu Item'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    decoration: InputDecoration(labelText: 'Name'),
-                    controller: nameController,
+      body: FutureBuilder<List>(
+        future: futureOrders,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return ListView.builder(
+              itemCount: snapshot.data!.length,
+              itemBuilder: (context, index) {
+                var order = snapshot.data![index];
+                return Material(
+                  color: Colors.transparent,
+                  child: ExpansionTile(
+                    title: Text('Order #${order['id']}'),
+                    children: order['items'].entries.map<Widget>((itemEntry) {
+                      var itemName = itemEntry.key;
+                      var itemDetails = itemEntry.value;
+                      return Card(
+                        child: ListTile(
+                          title: Text(itemName),
+                          subtitle:
+                              Text(itemDetails['isPrepared'] ? '已完成' : '未完成'),
+                          trailing: !itemDetails['isPrepared']
+                              ? ElevatedButton(
+                                  onPressed: () async {
+                                    await completeOrderItem(
+                                        order['id'], itemName);
+                                    setState(() {
+                                      itemDetails['isPrepared'] = true;
+                                      futureOrders = fetchOrders(); // 更新订单列表
+                                    });
+                                  },
+                                  child: Text('确认完成'),
+                                )
+                              : null,
+                        ),
+                      );
+                    }).toList(),
                   ),
-                  TextField(
-                    decoration: InputDecoration(labelText: 'Price'),
-                    keyboardType: TextInputType.number,
-                    controller: priceController,
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    String name = nameController.text;
-                    double price = double.parse(priceController.text);
-                    addMenuItem(name, price);
-                    Navigator.of(context).pop();
-                  },
-                  child: Text('Add'),
-                ),
-              ],
-            ),
-          );
+                );
+              },
+            );
+          } else if (snapshot.hasError) {
+            return Text('${snapshot.error}');
+          }
+          return CircularProgressIndicator();
         },
-        child: Icon(Icons.add),
       ),
     );
   }
