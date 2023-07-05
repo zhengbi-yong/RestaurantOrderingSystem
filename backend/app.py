@@ -1,9 +1,10 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, session
 from flask_cors import CORS
-from models import MenuItem, Order
+from models import MenuItem, Order, User
 from database import db
 from flask_sqlalchemy import SQLAlchemy
 import json
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 def create_app():
@@ -11,6 +12,7 @@ def create_app():
     configure_db(app)
     CORS(app)
     db.init_app(app)
+    app.config['SECRET_KEY'] = 'your-secret-key'
     return app
 
 
@@ -20,6 +22,47 @@ def configure_db(app):
 
 
 app = create_app()
+
+
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    identity = data.get('identity')
+
+    if not username or not password or not identity:
+        return jsonify({'message': 'Missing username, password or identity'}), 400
+
+    with app.app_context():
+        user = User.query.filter_by(username=username).first()
+        if user:
+            return jsonify({'message': 'User already exists'}), 400
+        password_hash = generate_password_hash(password)
+        new_user = User(username=username, password_hash=generate_password_hash(
+            password), identity=identity)
+        db.session.add(new_user)
+        db.session.commit()
+    return jsonify({'message': 'User registered successfully'}), 200
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+
+    if not username or not password:
+        return jsonify({'message': 'Missing username or password'}), 400
+
+    with app.app_context():
+        user = User.query.filter_by(username=username).first()
+        if user and check_password_hash(user.password_hash, password):
+            session['username'] = username
+            session['identity'] = user.identity
+            return jsonify({'message': 'Logged in successfully'}), 200
+        else:
+            return jsonify({'message': 'Invalid username or password'}), 400
 
 
 @app.route('/menu', methods=['GET'])
