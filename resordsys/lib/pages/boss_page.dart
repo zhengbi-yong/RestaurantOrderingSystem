@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'menuitemmanage_page.dart';
 
 class BossPage extends StatefulWidget {
   @override
@@ -62,6 +63,21 @@ class _BossPageState extends State<BossPage> {
             ),
           ),
         ],
+      ),
+      bottomNavigationBar: BottomAppBar(
+        child: Row(
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MenuItemManagePage()),
+                );
+              },
+              child: Text('菜品管理'),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'menuitemmanage_page.dart';
 
 class ChefPage extends StatefulWidget {
   @override
@@ -20,7 +21,6 @@ class _ChefPageState extends State<ChefPage> {
     final response =
         await http.get(Uri.parse('http://localhost:5000/orders/confirmed'));
     if (response.statusCode == 200) {
-      // print(response.body);
       return json.decode(response.body);
     } else {
       throw Exception('Failed to load orders');
@@ -33,7 +33,6 @@ class _ChefPageState extends State<ChefPage> {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'orderId': orderId, 'itemName': itemName}),
     );
-    print('Server response: ${response.body}'); // 新添加的打印语句
     if (response.statusCode != 200) {
       throw Exception('Failed to complete order item');
     }
@@ -43,7 +42,7 @@ class _ChefPageState extends State<ChefPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Chef Page'),
+        title: Text('厨师'),
       ),
       body: FutureBuilder<List>(
         future: futureOrders,
@@ -70,10 +69,17 @@ class _ChefPageState extends State<ChefPage> {
                                   onPressed: () async {
                                     await completeOrderItem(
                                         order['id'], itemName);
-                                    setState(() {
-                                      itemDetails['isPrepared'] = true;
-                                      futureOrders = fetchOrders(); // 更新订单列表
-                                    });
+                                    // 如果所有的菜品都已经完成，那么订单就从列表中移除
+                                    if (order['items'].values.every(
+                                        (item) => item['isPrepared'] == true)) {
+                                      setState(() {
+                                        snapshot.data!.removeAt(index);
+                                      });
+                                    } else {
+                                      setState(() {
+                                        itemDetails['isPrepared'] = true;
+                                      });
+                                    }
                                   },
                                   child: Text('确认完成'),
                                 )
@@ -90,6 +96,21 @@ class _ChefPageState extends State<ChefPage> {
           }
           return CircularProgressIndicator();
         },
+      ),
+      bottomNavigationBar: BottomAppBar(
+        child: Row(
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MenuItemManagePage()),
+                );
+              },
+              child: Text('菜品管理'),
+            ),
+          ],
+        ),
       ),
     );
   }

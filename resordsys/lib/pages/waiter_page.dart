@@ -20,7 +20,6 @@ class _WaiterPageState extends State<WaiterPage> {
     final response =
         await http.get(Uri.parse('http://localhost:5000/orders/submitted'));
     if (response.statusCode == 200) {
-      // print('Orders: ${response.body}');
       setState(() {
         orders = jsonDecode(response.body);
       });
@@ -30,7 +29,6 @@ class _WaiterPageState extends State<WaiterPage> {
   }
 
   Future<void> confirmOrder(int id) async {
-    print('Order ID: $id');
     final response = await http.post(
       Uri.parse('http://localhost:5000/orders/confirm'),
       headers: {'Content-Type': 'application/json'},
@@ -43,35 +41,57 @@ class _WaiterPageState extends State<WaiterPage> {
     }
   }
 
+  Future<void> serveItem(int orderId, String itemName) async {
+    final response = await http.post(
+      Uri.parse('http://localhost:5000/orders/serve_item'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'orderId': orderId, 'itemName': itemName}),
+    );
+    if (response.statusCode == 200) {
+      fetchOrders();
+    } else {
+      print('Failed to serve item');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Waiter Page'),
+        title: Text('服务员'),
       ),
       body: ListView.builder(
         itemCount: orders.length,
         itemBuilder: (ctx, index) {
           final order = orders[index];
           return ExpansionTile(
-            title: Text('Order ${order['id']}'),
+            title: Text('订单： ${order['id']}'),
             children: [
               ...(order['items'] as Map<String, dynamic>).entries.map((item) {
                 return ListTile(
                   title: Text(item.key),
                   subtitle:
                       Text('${item.value['count']} x \$${item.value['price']}'),
-                  trailing: Text(item.value['status'] == 'completed'
-                      ? 'Completed'
-                      : 'Pending'),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(item.value['isPrepared'] ? '已就绪' : '准备中'),
+                      if (item.value['isPrepared'] && !item.value['isServed'])
+                        TextButton(
+                          onPressed: () => serveItem(order['id'], item.key),
+                          child: Text('确认上菜'),
+                        ),
+                      Text(item.value['isServed'] ? '已上菜' : '未上菜'),
+                    ],
+                  ),
                 );
               }).toList(),
               ElevatedButton(
                 onPressed: () => confirmOrder(order['id']),
-                child: Text('Confirm Order'),
+                child: Text('确认订单'),
               ),
               Text(
-                  'Status: ${order['isSubmitted'] ? 'Submitted' : 'Not submitted'} / ${order['isConfirmed'] ? 'Confirmed' : 'Not confirmed'} / ${order['isCompleted'] ? 'Completed' : 'Not completed'}'),
+                  'Status: ${order['isSubmitted'] ? '已提交' : '未提交'} / ${order['isConfirmed'] ? '已确认' : '未确认'} / ${order['isCompleted'] ? '已完成' : '未完成'}'),
             ],
           );
         },
