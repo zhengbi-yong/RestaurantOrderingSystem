@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:developer' as developer;
+
+void log(String message) {
+  developer.log(message, name: 'ShoppingCartPage');
+}
 
 class ShoppingCartPage extends StatelessWidget {
   final Map<String, int> orderItems;
@@ -94,7 +99,7 @@ class ShoppingCartPage extends StatelessWidget {
     };
 
     return await http.post(
-      Uri.parse('http://localhost:5000/orders'), // 修改为后端接口地址
+      Uri.parse('http://8.134.163.125:5000/orders'), // 修改为后端接口地址
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(order),
     );

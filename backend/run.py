@@ -1,54 +1,111 @@
 #!/usr/bin/env python3
-from flask import Flask, jsonify, request, session
+from flask import Flask, jsonify, request
+from flask import session
+from flask import make_response
 from flask_cors import CORS
 from models import MenuItem, Order, User
-from database import db
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import exc
 import json
 from werkzeug.security import generate_password_hash, check_password_hash
+import os
+import codecs
+import logging
+from datetime import datetime
+import time
+from database import db
+import sys
+# 创建日志记录器
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
+# 创建文件处理器
+file_handler = logging.FileHandler('app.log')
+file_handler.setLevel(logging.DEBUG)
 
+# 创建日志记录格式
+log_format = logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+file_handler.setFormatter(log_format)
+
+# 创建控制台处理器
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.DEBUG)
+console_handler.setFormatter(log_format)
+
+# 将处理器添加到日志记录器
+logger.addHandler(file_handler)
+# 将控制台处理器添加到日志记录器
+logger.addHandler(console_handler)
 def create_app():
+    logger.info('开始创建程序')
     app = Flask(__name__)
     configure_db(app)
+    logger.debug('数据库设置完成')
     CORS(app)
+    logger.debug('跨域设置完成')
     db.init_app(app)
     app.config['SECRET_KEY'] = 'your-secret-key'
+    logger.info('创建程序完成')
     return app
 
-
 def configure_db(app):
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:sisyphus@localhost/restaurant'
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql://root:sisyphus@db:3306/restaurant'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-
 app = create_app()
+
+# 重试机制，尝试连接数据库
+MAX_RETRIES = 10
+last_exception = None
+for i in range(MAX_RETRIES):
+    try:
+        with app.app_context():
+            db.create_all()  # 或者其他一些会访问数据库的操作
+    except exc.OperationalError as e:
+        last_exception = e
+        if i < MAX_RETRIES - 1:  # i 从0开始，所以这里使用 MAX_RETRIES - 1
+            wait_time = 2 ** i  # 指数退避策略
+            logger.info(f"数据库连接失败，等待 {wait_time} 秒后重试（第 {i+1} 次尝试）")
+            time.sleep(wait_time)
+            continue
+        else:
+            logger.error(f"数据库连接失败，已达最大尝试次数：{e}")
+            raise
+    break
+else:  # 这个else块在for循环正常结束（即没有被break语句中断）时执行
+    if last_exception is not None:
+        raise last_exception
+
 
 
 @app.route('/register', methods=['POST'])
 def register():
+    logger.info('开始注册用户...')
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
     identity = data.get('identity')
 
     if not username or not password or not identity:
+        logger.warning('缺少用户名、密码或身份信息')
         return jsonify({'message': 'Missing username, password or identity'}), 400
 
     with app.app_context():
         user = User.query.filter_by(username=username).first()
         if user:
+            logger.warning('用户已存在')
             return jsonify({'message': 'User already exists'}), 400
         password_hash = generate_password_hash(password)
-        new_user = User(username=username, password_hash=generate_password_hash(
-            password), identity=identity)
+        new_user = User(username=username, password_hash=password_hash, identity=identity)
         db.session.add(new_user)
         db.session.commit()
+    logger.info('用户注册成功')
     return jsonify({'message': 'User registered successfully'}), 200
 
 
 @app.route('/login', methods=['POST'])
 def login():
+    logger.debug('Received login request')
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
@@ -57,12 +114,24 @@ def login():
         return jsonify({'message': 'Missing username or password'}), 400
 
     with app.app_context():
+        logger.debug(f'Attempting to find user: {username}')
         user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password_hash, password):
-            session['username'] = username
-            session['identity'] = user.identity
-            return jsonify({'message': 'Logged in successfully'}), 200
+        if user:
+            logger.debug(f'User {username} found, checking password...')
+            if check_password_hash(user.password_hash, password):
+                session['username'] = username
+                session['identity'] = user.identity
+                # 创建响应，并设置 cookie 以与前端同步会话信息
+                response = jsonify({'message': 'Logged in successfully'})
+                response.set_cookie('username', username)
+                response.set_cookie('identity', user.identity)
+                logger.debug(f'User {username} logged in successfully')
+                return response, 200
+            else:
+                logger.debug(f'Incorrect password for user {username}')
+                return jsonify({'message': 'Invalid username or password'}), 400
         else:
+            logging.debug(f'User {username} not found')
             return jsonify({'message': 'Invalid username or password'}), 400
 
 

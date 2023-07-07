@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:developer' as developer;
+
+void log(String message) {
+  developer.log(message, name: 'RegisterPage');
+}
 
 class RegisterPage extends StatefulWidget {
   @override
@@ -13,8 +18,9 @@ class _RegisterPageState extends State<RegisterPage> {
   String dropdownValue = '顾客';
 
   Future<void> register(String username, String password) async {
+    log('请求注册');
     final response = await http.post(
-      Uri.parse('http://localhost:5000/register'),
+      Uri.parse('http://8.134.163.125:5000/register'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -24,7 +30,9 @@ class _RegisterPageState extends State<RegisterPage> {
         'identity': dropdownValue,
       }),
     );
-
+    log('注册请求 - 用户名：$username ，密码： $password 身份： $dropdownValue');
+    log('Response body: ' + response.body);
+    log('Status code: ${response.statusCode}');
     if (response.statusCode == 200) {
       // 注册成功的操作
       showDialog(
@@ -64,6 +72,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    log('注册页构建');
     return Scaffold(
       appBar: AppBar(
         title: Text('Register'),

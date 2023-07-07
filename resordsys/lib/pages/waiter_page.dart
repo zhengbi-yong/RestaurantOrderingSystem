@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:developer' as developer;
+
+void log(String message) {
+  developer.log(message, name: 'WaiterPage');
+}
 
 class WaiterPage extends StatefulWidget {
   @override
@@ -18,7 +23,7 @@ class _WaiterPageState extends State<WaiterPage> {
 
   Future<void> fetchOrders() async {
     final response =
-        await http.get(Uri.parse('http://localhost:5000/orders/submitted'));
+        await http.get(Uri.parse('http://8.134.163.125:5000/orders/submitted'));
     if (response.statusCode == 200) {
       setState(() {
         orders = jsonDecode(response.body);
@@ -30,7 +35,7 @@ class _WaiterPageState extends State<WaiterPage> {
 
   Future<void> confirmOrder(int id) async {
     final response = await http.post(
-      Uri.parse('http://localhost:5000/orders/confirm'),
+      Uri.parse('http://8.134.163.125:5000/orders/confirm'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'id': id}),
     );
@@ -43,7 +48,7 @@ class _WaiterPageState extends State<WaiterPage> {
 
   Future<void> serveItem(int orderId, String itemName) async {
     final response = await http.post(
-      Uri.parse('http://localhost:5000/orders/serve_item'),
+      Uri.parse('http://8.134.163.125:5000/orders/serve_item'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'orderId': orderId, 'itemName': itemName}),
     );

@@ -1,4 +1,4 @@
-# flutter_app/Dockerfile
+# resordsys/Dockerfile
 
 # 使用官方的Nginx镜像
 FROM nginx:stable

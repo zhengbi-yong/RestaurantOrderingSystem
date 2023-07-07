@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'menuitemmanage_page.dart';
+import 'dart:developer' as developer;
+
+void log(String message) {
+  developer.log(message, name: 'BossPage');
+}
 
 class BossPage extends StatefulWidget {
   @override
@@ -19,7 +24,8 @@ class _BossPageState extends State<BossPage> {
   }
 
   Future<void> fetchOrders() async {
-    final response = await http.get(Uri.parse('http://localhost:5000/orders'));
+    final response =
+        await http.get(Uri.parse('http://8.134.163.125:5000/orders'));
     // print(response.body);
     if (response.statusCode == 200) {
       setState(() {

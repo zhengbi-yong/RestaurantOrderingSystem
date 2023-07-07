@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'shoppingcart_page.dart';
+import 'dart:developer' as developer;
+
+void log(String message) {
+  developer.log(message, name: 'CustomerPage');
+}
 
 class CustomerPage extends StatefulWidget {
   @override
@@ -21,7 +26,8 @@ class _CustomerPageState extends State<CustomerPage> {
   }
 
   Future<void> fetchMenu() async {
-    final response = await http.get(Uri.parse('http://localhost:5000/menu'));
+    final response =
+        await http.get(Uri.parse('http://8.134.163.125:5000/menu'));
     if (response.statusCode == 200) {
       setState(() {
         menuItems = jsonDecode(response.body);
@@ -33,7 +39,7 @@ class _CustomerPageState extends State<CustomerPage> {
 
   Future<void> addMenuItem(String name, double price) async {
     final response = await http.post(
-      Uri.parse('http://localhost:5000/menu'),
+      Uri.parse('http://8.134.163.125:5000/menu'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'name': name, 'price': price}),
     );

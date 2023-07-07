@@ -1,0 +1,94 @@
+INFO:root:开始创建程序
+DEBUG:root:连接到mysql://root:sisyphus@localhost/restaurant
+DEBUG:root:数据库设置完成
+DEBUG:root:跨域设置完成
+INFO:root:创建程序完成
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug: * Restarting with stat
+INFO:root:开始创建程序
+DEBUG:root:连接到mysql://root:sisyphus@localhost/restaurant
+DEBUG:root:数据库设置完成
+DEBUG:root:跨域设置完成
+INFO:root:创建程序完成
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 905-180-822
+INFO:werkzeug:127.0.0.1 - - [05/Jul/2023 20:42:25] "OPTIONS /login HTTP/1.1" 200 -
+DEBUG:root:Received login request
+DEBUG:root:Attempting to find user: 1号桌子
+DEBUG:root:User 1号桌子 found, checking password...
+DEBUG:root:User 1号桌子 logged in successfully
+INFO:werkzeug:127.0.0.1 - - [05/Jul/2023 20:42:26] "POST /login HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Jul/2023 20:42:26] "GET /menu HTTP/1.1" 200 -
+INFO:werkzeug: * Detected change in 'C:\\Sisyphus\\Projects\\RestaurantOrderingSystem\\backend\\run.py', reloading
+INFO:werkzeug: * Restarting with stat
+INFO:root:开始创建程序
+DEBUG:root:连接到mysql://root:sisyphus@localhost/restaurant
+DEBUG:root:数据库设置完成
+DEBUG:root:跨域设置完成
+INFO:root:创建程序完成
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 905-180-822
+INFO:root:开始创建程序
+DEBUG:root:连接到mysql://root:sisyphus@localhost/restaurant
+DEBUG:root:数据库设置完成
+DEBUG:root:跨域设置完成
+INFO:root:创建程序完成
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug: * Restarting with stat
+INFO:root:开始创建程序
+DEBUG:root:连接到mysql://root:sisyphus@localhost/restaurant
+DEBUG:root:数据库设置完成
+DEBUG:root:跨域设置完成
+INFO:root:创建程序完成
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 905-180-822
+INFO:werkzeug:127.0.0.1 - - [05/Jul/2023 20:46:04] "OPTIONS /login HTTP/1.1" 200 -
+DEBUG:root:Received login request
+DEBUG:root:Attempting to find user: 1号桌子
+DEBUG:root:User 1号桌子 found, checking password...
+DEBUG:root:User 1号桌子 logged in successfully
+INFO:werkzeug:127.0.0.1 - - [05/Jul/2023 20:46:05] "POST /login HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [05/Jul/2023 20:46:05] "GET /menu HTTP/1.1" 200 -
+INFO:root:开始创建程序
+DEBUG:root:连接到mysql://root:sisyphus@localhost/restaurant
+DEBUG:root:数据库设置完成
+DEBUG:root:跨域设置完成
+INFO:root:创建程序完成
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug: * Restarting with stat
+INFO:root:开始创建程序
+DEBUG:root:连接到mysql://root:sisyphus@localhost/restaurant
+DEBUG:root:数据库设置完成
+DEBUG:root:跨域设置完成
+INFO:root:创建程序完成
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 905-180-822
+INFO:root:开始创建程序
+DEBUG:root:连接到mysql://root:sisyphus@localhost/restaurant
+DEBUG:root:数据库设置完成
+DEBUG:root:跨域设置完成
+INFO:root:创建程序完成
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug: * Restarting with stat
+INFO:root:开始创建程序
+DEBUG:root:连接到mysql://root:sisyphus@localhost/restaurant
+DEBUG:root:数据库设置完成
+DEBUG:root:跨域设置完成
+INFO:root:创建程序完成
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 905-180-822
+INFO:werkzeug:127.0.0.1 - - [06/Jul/2023 09:05:31] "OPTIONS /login HTTP/1.1" 200 -
+DEBUG:root:Received login request
+DEBUG:root:Attempting to find user: 1号桌子
+DEBUG:root:User 1号桌子 found, checking password...
+DEBUG:root:User 1号桌子 logged in successfully
+INFO:werkzeug:127.0.0.1 - - [06/Jul/2023 09:05:31] "POST /login HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [06/Jul/2023 09:05:31] "GET /menu HTTP/1.1" 200 -

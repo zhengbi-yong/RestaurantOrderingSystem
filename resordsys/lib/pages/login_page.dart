@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'register_page.dart'; // 需要导入新的register_page
+import 'register_page.dart';
+import 'dart:developer' as developer;
+
+void log(String message) {
+  developer.log(message, name: 'LoginPage');
+}
 
 class LoginPage extends StatefulWidget {
   @override
@@ -14,19 +19,25 @@ class _LoginPageState extends State<LoginPage> {
   String dropdownValue = '顾客';
 
   Future<void> login(String username, String password) async {
+    log('请求登录');
+    // final passwordHash = sha256.convert(utf8.encode(password)).toString();
     final response = await http.post(
-      Uri.parse('http://localhost:5000/login'),
+      Uri.parse('http://8.134.163.125:5000/login'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
       body: jsonEncode(<String, String>{
         'username': username,
         'password': password,
+        'identity': dropdownValue,
       }),
     );
-
+    log('登录请求 - 用户名：$username ，密码： $password 身份： $dropdownValue');
+    log('Response body: ' + response.body);
+    log('Status code: ${response.statusCode}');
     if (response.statusCode == 200) {
       // 登录成功的操作
+      log('登录成功');
       String identity = dropdownValue;
       switch (identity) {
         case '顾客':
@@ -47,6 +58,7 @@ class _LoginPageState extends State<LoginPage> {
       }
     } else {
       // 登录失败的操作
+      log('登录失败');
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -67,6 +79,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    log('登录页构建');
     return Scaffold(
       appBar: AppBar(
         title: Text('Login'),

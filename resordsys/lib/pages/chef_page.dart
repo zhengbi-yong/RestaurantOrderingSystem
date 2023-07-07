@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'menuitemmanage_page.dart';
+import 'dart:developer' as developer;
+
+void log(String message) {
+  developer.log(message, name: 'ChefPage');
+}
 
 class ChefPage extends StatefulWidget {
   @override
@@ -19,7 +24,7 @@ class _ChefPageState extends State<ChefPage> {
 
   Future<List> fetchOrders() async {
     final response =
-        await http.get(Uri.parse('http://localhost:5000/orders/confirmed'));
+        await http.get(Uri.parse('http://8.134.163.125:5000/orders/confirmed'));
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
@@ -29,7 +34,7 @@ class _ChefPageState extends State<ChefPage> {
 
   Future<void> completeOrderItem(int orderId, String itemName) async {
     final response = await http.post(
-      Uri.parse('http://localhost:5000/orders/complete_item'),
+      Uri.parse('http://8.134.163.125:5000/orders/complete_item'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'orderId': orderId, 'itemName': itemName}),
     );

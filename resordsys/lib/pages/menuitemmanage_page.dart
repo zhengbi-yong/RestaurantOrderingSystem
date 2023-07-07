@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:developer' as developer;
+
+void log(String message) {
+  developer.log(message, name: 'MenuItemManagePage');
+}
 
 class MenuItemManagePage extends StatefulWidget {
   @override
@@ -20,7 +25,8 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
   }
 
   Future<List> fetchMenuItems() async {
-    final response = await http.get(Uri.parse('http://localhost:5000/menu'));
+    final response =
+        await http.get(Uri.parse('http://8.134.163.125:5000/menu'));
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
@@ -30,7 +36,7 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
 
   Future<void> deleteMenuItem(int itemId) async {
     final response = await http.delete(
-      Uri.parse('http://localhost:5000/menu/$itemId'),
+      Uri.parse('http://8.134.163.125:5000/menu/$itemId'),
     );
     if (response.statusCode != 200) {
       throw Exception('Failed to delete menu item');
@@ -39,7 +45,7 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
 
   Future<void> addMenuItem(String name, String price) async {
     final response = await http.post(
-      Uri.parse('http://localhost:5000/menu'),
+      Uri.parse('http://8.134.163.125:5000/menu'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
