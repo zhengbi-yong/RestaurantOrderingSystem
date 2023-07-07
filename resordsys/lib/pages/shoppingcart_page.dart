@@ -56,7 +56,7 @@ class ShoppingCartPage extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('总价: \$${total.toStringAsFixed(2)}'),
+                Text('总价: ${total.toStringAsFixed(2)}元'),
                 ElevatedButton(
                   onPressed: () async {
                     var response = await submitOrder(total);

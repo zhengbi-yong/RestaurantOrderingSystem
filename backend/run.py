@@ -15,6 +15,9 @@ from datetime import datetime
 import time
 from database import db
 import sys
+from flask_socketio import SocketIO, emit
+
+
 # 创建日志记录器
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -37,22 +40,27 @@ logger.addHandler(file_handler)
 # 将控制台处理器添加到日志记录器
 logger.addHandler(console_handler)
 def create_app():
-    logger.info('开始创建程序')
+    logger.info('开始创建后端程序')
     app = Flask(__name__)
     configure_db(app)
     logger.debug('数据库设置完成')
-    CORS(app)
+    
     logger.debug('跨域设置完成')
     db.init_app(app)
     app.config['SECRET_KEY'] = 'your-secret-key'
-    logger.info('创建程序完成')
+    logger.info('后端程序创建完成')
     return app
 
 def configure_db(app):
+    logger.info('开始配置数据库')
     app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql://root:sisyphus@db:3306/restaurant'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    logger.info('数据库配置完成')
 
 app = create_app()
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+socketio = SocketIO(cors_allowed_origins="*")
+socketio.init_app(app)
 
 # 重试机制，尝试连接数据库
 MAX_RETRIES = 10
@@ -80,7 +88,7 @@ else:  # 这个else块在for循环正常结束（即没有被break语句中断�
 
 @app.route('/register', methods=['POST'])
 def register():
-    logger.info('开始注册用户...')
+    logger.info('开始注册用户')
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
@@ -105,7 +113,7 @@ def register():
 
 @app.route('/login', methods=['POST'])
 def login():
-    logger.debug('Received login request')
+    logger.debug('收到登录请求')
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
@@ -114,10 +122,10 @@ def login():
         return jsonify({'message': 'Missing username or password'}), 400
 
     with app.app_context():
-        logger.debug(f'Attempting to find user: {username}')
+        logger.debug(f'正在数据库中寻找用户: {username}')
         user = User.query.filter_by(username=username).first()
         if user:
-            logger.debug(f'User {username} found, checking password...')
+            logger.debug(f'用户 {username} 存在, 正在检查密码')
             if check_password_hash(user.password_hash, password):
                 session['username'] = username
                 session['identity'] = user.identity
@@ -125,18 +133,19 @@ def login():
                 response = jsonify({'message': 'Logged in successfully'})
                 response.set_cookie('username', username)
                 response.set_cookie('identity', user.identity)
-                logger.debug(f'User {username} logged in successfully')
+                logger.debug(f'用户 {username} 成功登入系统')
                 return response, 200
             else:
-                logger.debug(f'Incorrect password for user {username}')
+                logger.debug(f'用户 {username} 密码错误')
                 return jsonify({'message': 'Invalid username or password'}), 400
         else:
-            logging.debug(f'User {username} not found')
+            logger.debug(f'用户 {username} 不存在')
             return jsonify({'message': 'Invalid username or password'}), 400
 
 
 @app.route('/menu', methods=['GET'])
 def get_menu():
+    logger.debug(f'获取菜单列表')
     with app.app_context():
         menu_items = MenuItem.query.all()
         menu = [item.serialize() for item in menu_items]
@@ -145,6 +154,7 @@ def get_menu():
 
 @app.route('/menu', methods=['POST'])
 def add_menu_item():
+    logger.debug(f'添加菜单项')
     data = request.get_json()
     new_item = MenuItem(name=data['name'], price=data['price'])
     with app.app_context():
@@ -155,6 +165,7 @@ def add_menu_item():
 
 @app.route('/menu/<int:item_id>', methods=['DELETE'])
 def delete_menu_item(item_id):
+    logger.debug(f'删除菜单项')
     with app.app_context():
         item = MenuItem.query.get(item_id)
         if item:
@@ -167,6 +178,7 @@ def delete_menu_item(item_id):
 
 @app.route('/orders', methods=['POST'])
 def add_order():
+    logger.debug(f'新增订单')
     data = request.get_json()
     new_order = Order(
         user=data['user'],
@@ -180,7 +192,9 @@ def add_order():
     with app.app_context():
         db.session.add(new_order)
         db.session.commit()
-    return jsonify({'message': 'Order added successfully'})
+        socketio.emit('new order', 'A new order has been submitted')
+        logger.debug(f'已发射new order事件，通知前端有新订单提交')
+    return jsonify({'message': 'Order added successfully'}), 200
 
 
 @app.route('/orders', methods=['GET'])
@@ -218,6 +232,7 @@ def confirm_order():
         if order:
             order.isConfirmed = True
             db.session.commit()
+            socketio.emit('order confirmed', {'order_id': order_id})
             return jsonify({'message': 'Order confirmed successfully'})
         else:
             return jsonify({'message': 'Order not found'})

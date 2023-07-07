@@ -19,7 +19,8 @@ WORKDIR /app/backend
 COPY . /app/backend
 
 # 安装你需要的任何包
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
+RUN pip install gunicorn gevent gevent-websocket -i https://mirrors.aliyun.com/pypi/simple/
 
 ENV FLASK_APP=run.py
 
@@ -27,4 +28,5 @@ ENV FLASK_APP=run.py
 EXPOSE 5000
 
 # 运行你的应用
-CMD ["flask", "run", "--host=0.0.0.0"]
+# CMD ["flask", "run", "--host=0.0.0.0"]
+CMD ["gunicorn", "-k", "geventwebsocket.gunicorn.workers.GeventWebSocketWorker", "-w", "1", "-b", "0.0.0.0:5000", "run:app"]

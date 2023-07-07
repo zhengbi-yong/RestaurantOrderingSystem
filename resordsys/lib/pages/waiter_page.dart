@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:developer' as developer;
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
+IO.Socket? socket;
 void log(String message) {
   developer.log(message, name: 'WaiterPage');
 }
@@ -19,6 +21,31 @@ class _WaiterPageState extends State<WaiterPage> {
   void initState() {
     super.initState();
     fetchOrders();
+
+    // 初始化socket连接
+    socket = IO.io('http://8.134.163.125:5000', <String, dynamic>{
+      'transports': ['websocket'],
+      'autoConnect': false,
+    });
+
+    // 连接到服务器
+    socket?.connect();
+
+    // 当服务器发送 'order confirmed' 事件时触发
+    socket?.on('order confirmed', (_) {
+      fetchOrders();
+    });
+    // 当服务器发送 'new order' 事件时触发
+    socket?.on('new order', (_) {
+      fetchOrders();
+    });
+  }
+
+  @override
+  void dispose() {
+    // 断开连接，清理资源
+    socket?.disconnect();
+    super.dispose();
   }
 
   Future<void> fetchOrders() async {
