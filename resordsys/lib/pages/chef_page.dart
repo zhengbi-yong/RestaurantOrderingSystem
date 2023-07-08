@@ -3,6 +3,10 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'menuitemmanage_page.dart';
 import 'dart:developer' as developer;
+import 'package:socket_io_client/socket_io_client.dart' as IO;
+import '../config.dart';
+
+IO.Socket? socket;
 
 void log(String message) {
   developer.log(message, name: 'ChefPage');
@@ -14,27 +18,42 @@ class ChefPage extends StatefulWidget {
 }
 
 class _ChefPageState extends State<ChefPage> {
-  late Future<List> futureOrders;
-
+  List<dynamic> orders = [];
   @override
   void initState() {
     super.initState();
-    futureOrders = fetchOrders();
+    fetchOrders();
+
+    // 初始化socket连接
+    socket = IO.io('${Config.API_URL}', <String, dynamic>{
+      'transports': ['websocket'],
+      'autoConnect': false,
+    });
+
+    // 连接到服务器
+    socket?.connect();
+
+    // 当服务器发送 'order confirmed' 事件时触发
+    socket?.on('order confirmed', (_) {
+      fetchOrders();
+    });
   }
 
-  Future<List> fetchOrders() async {
+  Future<void> fetchOrders() async {
     final response =
-        await http.get(Uri.parse('http://8.134.163.125:5000/orders/confirmed'));
+        await http.get(Uri.parse('${Config.API_URL}/orders/confirmed'));
     if (response.statusCode == 200) {
-      return json.decode(response.body);
+      setState(() {
+        orders = jsonDecode(response.body);
+      });
     } else {
-      throw Exception('Failed to load orders');
+      print('获取订单列表失败');
     }
   }
 
   Future<void> completeOrderItem(int orderId, String itemName) async {
     final response = await http.post(
-      Uri.parse('http://8.134.163.125:5000/orders/complete_item'),
+      Uri.parse('${Config.API_URL}/orders/complete_item'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'orderId': orderId, 'itemName': itemName}),
     );
@@ -49,57 +68,45 @@ class _ChefPageState extends State<ChefPage> {
       appBar: AppBar(
         title: Text('厨师'),
       ),
-      body: FutureBuilder<List>(
-        future: futureOrders,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            return ListView.builder(
-              itemCount: snapshot.data!.length,
-              itemBuilder: (context, index) {
-                var order = snapshot.data![index];
-                return Material(
-                  color: Colors.transparent,
-                  child: ExpansionTile(
-                    title: Text('Order #${order['id']}'),
-                    children: order['items'].entries.map<Widget>((itemEntry) {
-                      var itemName = itemEntry.key;
-                      var itemDetails = itemEntry.value;
-                      return Card(
-                        child: ListTile(
-                          title: Text(itemName),
-                          subtitle:
-                              Text(itemDetails['isPrepared'] ? '已完成' : '未完成'),
-                          trailing: !itemDetails['isPrepared']
-                              ? ElevatedButton(
-                                  onPressed: () async {
-                                    await completeOrderItem(
-                                        order['id'], itemName);
-                                    // 如果所有的菜品都已经完成，那么订单就从列表中移除
-                                    if (order['items'].values.every(
-                                        (item) => item['isPrepared'] == true)) {
-                                      setState(() {
-                                        snapshot.data!.removeAt(index);
-                                      });
-                                    } else {
-                                      setState(() {
-                                        itemDetails['isPrepared'] = true;
-                                      });
-                                    }
-                                  },
-                                  child: Text('确认完成'),
-                                )
-                              : null,
-                        ),
-                      );
-                    }).toList(),
+      body: ListView.builder(
+        itemCount: orders.length,
+        itemBuilder: (context, index) {
+          var order = orders[index];
+          return Material(
+            color: Colors.transparent,
+            child: ExpansionTile(
+              title: Text('订单: ${order['id']}'),
+              children: order['items'].entries.map<Widget>((itemEntry) {
+                var itemName = itemEntry.key;
+                var itemDetails = itemEntry.value;
+                return Card(
+                  child: ListTile(
+                    title: Text(itemName),
+                    subtitle: Text(itemDetails['isPrepared'] ? '已备菜' : '未备菜'),
+                    trailing: !itemDetails['isPrepared']
+                        ? ElevatedButton(
+                            onPressed: () async {
+                              await completeOrderItem(order['id'], itemName);
+                              // 如果所有的菜品都已经完成，那么订单就从列表中移除
+                              if (order['items'].values.every(
+                                  (item) => item['isPrepared'] == true)) {
+                                setState(() {
+                                  orders.removeAt(index);
+                                });
+                              } else {
+                                setState(() {
+                                  itemDetails['isPrepared'] = true;
+                                });
+                              }
+                            },
+                            child: Text('出菜'),
+                          )
+                        : null,
                   ),
                 );
-              },
-            );
-          } else if (snapshot.hasError) {
-            return Text('${snapshot.error}');
-          }
-          return CircularProgressIndicator();
+              }).toList(),
+            ),
+          );
         },
       ),
       bottomNavigationBar: BottomAppBar(

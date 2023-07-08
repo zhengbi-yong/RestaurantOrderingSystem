@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'register_page.dart';
 import 'dart:developer' as developer;
+import '../config.dart';
 
 void log(String message) {
   developer.log(message, name: 'LoginPage');
@@ -20,9 +21,8 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> login(String username, String password) async {
     log('请求登录');
-    // final passwordHash = sha256.convert(utf8.encode(password)).toString();
     final response = await http.post(
-      Uri.parse('http://8.134.163.125:5000/login'),
+      Uri.parse('${Config.API_URL}/login'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -32,9 +32,9 @@ class _LoginPageState extends State<LoginPage> {
         'identity': dropdownValue,
       }),
     );
-    log('登录请求 - 用户名：$username ，密码： $password 身份： $dropdownValue');
-    log('Response body: ' + response.body);
-    log('Status code: ${response.statusCode}');
+    log('请求登录:用户名($username) 密码($password) 身份($dropdownValue)');
+    log('响应内容:${response.body}');
+    log('状态码:${response.statusCode}');
     if (response.statusCode == 200) {
       // 登录成功的操作
       log('登录成功');
@@ -54,6 +54,23 @@ class _LoginPageState extends State<LoginPage> {
           break;
         default:
           // 处理未知身份的情况，例如显示错误消息或其他操作
+          log('身份未知');
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('登录失败'),
+              content: Text('身份未知'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    // 重试登录
+                    Navigator.pushNamed(context, '/login');
+                  },
+                  child: Text('重新登录'),
+                ),
+              ],
+            ),
+          );
           break;
       }
     } else {
@@ -62,14 +79,15 @@ class _LoginPageState extends State<LoginPage> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('Login Failed'),
-          content: Text('Failed to login.'),
+          title: Text('登录失败'),
+          content: Text('用户名或密码错误'),
           actions: [
             TextButton(
               onPressed: () {
                 // 添加您想要的操作，如重试登录
+                Navigator.pushNamed(context, '/login');
               },
-              child: Text('OK'),
+              child: Text('重新登录'),
             ),
           ],
         ),
@@ -82,7 +100,7 @@ class _LoginPageState extends State<LoginPage> {
     log('登录页构建');
     return Scaffold(
       appBar: AppBar(
-        title: Text('Login'),
+        title: Text('登录'),
       ),
       body: Padding(
         padding: EdgeInsets.all(16.0),
@@ -107,18 +125,18 @@ class _LoginPageState extends State<LoginPage> {
             ),
             TextField(
               controller: _usernameController,
-              decoration: InputDecoration(hintText: 'Enter your username'),
+              decoration: InputDecoration(hintText: '用户名'),
             ),
             TextField(
               controller: _passwordController,
-              decoration: InputDecoration(hintText: 'Enter your password'),
+              decoration: InputDecoration(hintText: '密码'),
               obscureText: true,
             ),
             ElevatedButton(
               onPressed: () {
                 login(_usernameController.text, _passwordController.text);
               },
-              child: Text('Login'),
+              child: Text('登录'),
             ),
             ElevatedButton(
               onPressed: () {
@@ -128,7 +146,7 @@ class _LoginPageState extends State<LoginPage> {
                       builder: (context) => RegisterPage()), // 点击注册按钮跳转到注册页面
                 );
               },
-              child: Text('Register'),
+              child: Text('注册'),
             ),
           ],
         ),

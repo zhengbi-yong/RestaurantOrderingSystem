@@ -193,7 +193,7 @@ def add_order():
         db.session.add(new_order)
         db.session.commit()
         socketio.emit('new order', 'A new order has been submitted')
-        logger.debug(f'已发射new order事件，通知前端有新订单提交')
+        logger.debug(f'已发射new order事件,通知前端有新订单提交')
     return jsonify({'message': 'Order added successfully'}), 200
 
 
@@ -233,7 +233,8 @@ def confirm_order():
             order.isConfirmed = True
             db.session.commit()
             socketio.emit('order confirmed', {'order_id': order_id})
-            return jsonify({'message': 'Order confirmed successfully'})
+            logger.debug(f'已发射order confirmed事件,通知前端有新订单确认')
+            return jsonify({'message': 'Order confirmed successfully'}), 200
         else:
             return jsonify({'message': 'Order not found'})
 
@@ -251,6 +252,8 @@ def complete_order_item():
                 items[item_name]['isPrepared'] = True
                 order.items = json.dumps(items)
                 db.session.commit()
+                socketio.emit('dish prepared', {'order_id': order_id})
+                logger.debug(f'已发射dish prepared事件,通知前端有新订单确认')
                 return jsonify({'message': 'Order item completed successfully'})
             else:
                 return jsonify({'message': 'Order item not found'})

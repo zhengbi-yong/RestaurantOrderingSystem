@@ -3,8 +3,10 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:socket_io_client/socket_io_client.dart' as IO;
+import '../config.dart';
 
 IO.Socket? socket;
+
 void log(String message) {
   developer.log(message, name: 'WaiterPage');
 }
@@ -23,7 +25,7 @@ class _WaiterPageState extends State<WaiterPage> {
     fetchOrders();
 
     // 初始化socket连接
-    socket = IO.io('http://8.134.163.125:5000', <String, dynamic>{
+    socket = IO.io('${Config.API_URL}', <String, dynamic>{
       'transports': ['websocket'],
       'autoConnect': false,
     });
@@ -39,6 +41,10 @@ class _WaiterPageState extends State<WaiterPage> {
     socket?.on('new order', (_) {
       fetchOrders();
     });
+    // 当服务器发送 'dish prepared' 事件时触发
+    socket?.on('dish prepared', (_) {
+      fetchOrders();
+    });
   }
 
   @override
@@ -50,39 +56,39 @@ class _WaiterPageState extends State<WaiterPage> {
 
   Future<void> fetchOrders() async {
     final response =
-        await http.get(Uri.parse('http://8.134.163.125:5000/orders/submitted'));
+        await http.get(Uri.parse('${Config.API_URL}/orders/submitted'));
     if (response.statusCode == 200) {
       setState(() {
         orders = jsonDecode(response.body);
       });
     } else {
-      print('Failed to fetch orders');
+      print('获取订单列表失败');
     }
   }
 
   Future<void> confirmOrder(int id) async {
     final response = await http.post(
-      Uri.parse('http://8.134.163.125:5000/orders/confirm'),
+      Uri.parse('${Config.API_URL}/orders/confirm'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'id': id}),
     );
     if (response.statusCode == 200) {
       fetchOrders();
     } else {
-      print('Failed to confirm order');
+      print('确认订单失败');
     }
   }
 
   Future<void> serveItem(int orderId, String itemName) async {
     final response = await http.post(
-      Uri.parse('http://8.134.163.125:5000/orders/serve_item'),
+      Uri.parse('${Config.API_URL}/orders/serve_item'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'orderId': orderId, 'itemName': itemName}),
     );
     if (response.statusCode == 200) {
       fetchOrders();
     } else {
-      print('Failed to serve item');
+      print('上菜失败');
     }
   }
 
@@ -97,7 +103,7 @@ class _WaiterPageState extends State<WaiterPage> {
         itemBuilder: (ctx, index) {
           final order = orders[index];
           return ExpansionTile(
-            title: Text('订单： ${order['id']}'),
+            title: Text('订单: ${order['id']}'),
             children: [
               ...(order['items'] as Map<String, dynamic>).entries.map((item) {
                 return ListTile(
@@ -123,7 +129,7 @@ class _WaiterPageState extends State<WaiterPage> {
                 child: Text('确认订单'),
               ),
               Text(
-                  'Status: ${order['isSubmitted'] ? '已提交' : '未提交'} / ${order['isConfirmed'] ? '已确认' : '未确认'} / ${order['isCompleted'] ? '已完成' : '未完成'}'),
+                  '订单状态:${order['isSubmitted'] ? '已提交' : '未提交'} / ${order['isConfirmed'] ? '已确认' : '未确认'} / ${order['isCompleted'] ? '已完成' : '未完成'}'),
             ],
           );
         },

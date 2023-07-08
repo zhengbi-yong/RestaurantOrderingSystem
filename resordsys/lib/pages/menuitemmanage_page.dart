@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:developer' as developer;
+import '../config.dart';
 
 void log(String message) {
   developer.log(message, name: 'MenuItemManagePage');
@@ -25,8 +26,7 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
   }
 
   Future<List> fetchMenuItems() async {
-    final response =
-        await http.get(Uri.parse('http://8.134.163.125:5000/menu'));
+    final response = await http.get(Uri.parse('${Config.API_URL}/menu'));
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
@@ -36,7 +36,7 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
 
   Future<void> deleteMenuItem(int itemId) async {
     final response = await http.delete(
-      Uri.parse('http://8.134.163.125:5000/menu/$itemId'),
+      Uri.parse('${Config.API_URL}/menu/$itemId'),
     );
     if (response.statusCode != 200) {
       throw Exception('Failed to delete menu item');
@@ -45,7 +45,7 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
 
   Future<void> addMenuItem(String name, String price) async {
     final response = await http.post(
-      Uri.parse('http://8.134.163.125:5000/menu'),
+      Uri.parse('${Config.API_URL}/menu'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -69,27 +69,27 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Add Menu Item'),
+          title: Text('添加菜品'),
           content: Form(
             key: _formKey,
             child: Column(
               children: <Widget>[
                 TextFormField(
                   controller: _nameController,
-                  decoration: InputDecoration(hintText: 'Enter item name'),
+                  decoration: InputDecoration(hintText: '菜名'),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter item name';
+                      return '请输入菜名';
                     }
                     return null;
                   },
                 ),
                 TextFormField(
                   controller: _priceController,
-                  decoration: InputDecoration(hintText: 'Enter item price'),
+                  decoration: InputDecoration(hintText: '价格'),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter item price';
+                      return '请输入价格';
                     }
                     return null;
                   },
@@ -99,13 +99,13 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Cancel'),
+              child: Text('取消'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text('Add'),
+              child: Text('添加'),
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
                   addMenuItem(_nameController.text, _priceController.text);
@@ -123,7 +123,7 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Menu Item Manage Page'),
+        title: Text('菜品管理'),
       ),
       body: FutureBuilder<List>(
         future: futureMenuItems,
@@ -136,7 +136,8 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
                 return Card(
                   child: ListTile(
                     title: Text(menuItem['name']),
-                    subtitle: Text('\$${menuItem['price'].toStringAsFixed(2)}'),
+                    subtitle:
+                        Text('\$${menuItem['price'].toStringAsFixed(0)} 元'),
                     trailing: ElevatedButton(
                       onPressed: () async {
                         await deleteMenuItem(menuItem['id']);

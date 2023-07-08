@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:developer' as developer;
+import '../config.dart';
 
 void log(String message) {
   developer.log(message, name: 'ShoppingCartPage');
@@ -56,7 +57,7 @@ class ShoppingCartPage extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('总价: ${total.toStringAsFixed(2)}元'),
+                Text('总价: ${total.toStringAsFixed(0)} 元'),
                 ElevatedButton(
                   onPressed: () async {
                     var response = await submitOrder(total);
@@ -65,6 +66,7 @@ class ShoppingCartPage extends StatelessWidget {
                         SnackBar(content: Text('订单已提交')),
                       );
                       orderItems.clear();
+                      Navigator.pushNamed(context, '/customer_page');
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('提交订单失败')),
@@ -99,7 +101,7 @@ class ShoppingCartPage extends StatelessWidget {
     };
 
     return await http.post(
-      Uri.parse('http://8.134.163.125:5000/orders'), // 修改为后端接口地址
+      Uri.parse('${Config.API_URL}/orders'), // 修改为后端接口地址
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(order),
     );
