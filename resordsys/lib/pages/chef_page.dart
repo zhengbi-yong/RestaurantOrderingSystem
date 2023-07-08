@@ -79,29 +79,26 @@ class _ChefPageState extends State<ChefPage> {
               children: order['items'].entries.map<Widget>((itemEntry) {
                 var itemName = itemEntry.key;
                 var itemDetails = itemEntry.value;
-                return Card(
-                  child: ListTile(
-                    title: Text(itemName),
-                    subtitle: Text(itemDetails['isPrepared'] ? '已备菜' : '未备菜'),
-                    trailing: !itemDetails['isPrepared']
-                        ? ElevatedButton(
-                            onPressed: () async {
-                              await completeOrderItem(order['id'], itemName);
-                              // 如果所有的菜品都已经完成，那么订单就从列表中移除
-                              if (order['items'].values.every(
-                                  (item) => item['isPrepared'] == true)) {
-                                setState(() {
-                                  orders.removeAt(index);
-                                });
-                              } else {
-                                setState(() {
-                                  itemDetails['isPrepared'] = true;
-                                });
-                              }
-                            },
-                            child: Text('出菜'),
-                          )
-                        : null,
+                Color backgroundColor = itemDetails['isPrepared']
+                    ? Colors.green.withOpacity(0.5)
+                    : Colors.red.withOpacity(0.5);
+                return Container(
+                  color: backgroundColor,
+                  child: Card(
+                    child: ListTile(
+                      title: Text(itemName),
+                      subtitle: Text(itemDetails['isPrepared'] ? '已备菜' : '未备菜'),
+                      trailing: !itemDetails['isPrepared']
+                          ? ElevatedButton(
+                              onPressed: () async {
+                                await completeOrderItem(order['id'], itemName);
+                                // 如果所有的菜品都已经完成，那么订单就从列表中移除
+                                fetchOrders();
+                              },
+                              child: Text('出菜'),
+                            )
+                          : null,
+                    ),
                   ),
                 );
               }).toList(),

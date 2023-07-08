@@ -106,21 +106,30 @@ class _WaiterPageState extends State<WaiterPage> {
             title: Text('订单: ${order['id']}'),
             children: [
               ...(order['items'] as Map<String, dynamic>).entries.map((item) {
-                return ListTile(
-                  title: Text(item.key),
-                  subtitle:
-                      Text('${item.value['count']} x \$${item.value['price']}'),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(item.value['isPrepared'] ? '已就绪' : '准备中'),
-                      if (item.value['isPrepared'] && !item.value['isServed'])
-                        TextButton(
-                          onPressed: () => serveItem(order['id'], item.key),
-                          child: Text('确认上菜'),
-                        ),
-                      Text(item.value['isServed'] ? '已上菜' : '未上菜'),
-                    ],
+                Color backgroundColor = Colors.white;
+                if (item.value['isPrepared'] && !item.value['isServed']) {
+                  backgroundColor = Colors.green.withOpacity(0.5);
+                } else if (item.value['isServed']) {
+                  backgroundColor = Colors.blue.withOpacity(0.5);
+                }
+                return Container(
+                  color: backgroundColor,
+                  child: ListTile(
+                    title: Text(item.key),
+                    subtitle: Text(
+                        '${item.value['count']} x \$${item.value['price']}'),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(item.value['isPrepared'] ? '已就绪' : '准备中'),
+                        if (item.value['isPrepared'] && !item.value['isServed'])
+                          TextButton(
+                            onPressed: () => serveItem(order['id'], item.key),
+                            child: Text('确认上菜'),
+                          ),
+                        Text(item.value['isServed'] ? '已上菜' : '未上菜'),
+                      ],
+                    ),
                   ),
                 );
               }).toList(),
