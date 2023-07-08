@@ -311,5 +311,19 @@ def delete_order(order_id):
 
     return jsonify({'message': 'Order deleted successfully'}), 200
 
+@app.route('/orders/<int:order_id>', methods=['PUT'])
+def modify_order(order_id):
+    order = Order.query.get(order_id)
+    if order is None:
+        return jsonify({'error': 'Order not found'}), 404
+
+    updated_order = request.json
+    order.total = updated_order['total']
+    # 更新其他的数据
+
+    db.session.commit()
+
+    return jsonify({'message': 'Order modified successfully'}), 200
+
 if __name__ == '__main__':
     app.run(debug=True)

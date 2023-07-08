@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'register_page.dart';
 import 'dart:developer' as developer;
 import '../config.dart';
+import '../globals.dart';
 
 void log(String message) {
   developer.log(message, name: 'LoginPage');
@@ -39,6 +40,7 @@ class _LoginPageState extends State<LoginPage> {
       // 登录成功的操作
       log('登录成功');
       String identity = dropdownValue;
+      globalUser = "$username@${DateTime.now().toIso8601String()}";
       switch (identity) {
         case '顾客':
           Navigator.pushNamed(context, '/customer_page');

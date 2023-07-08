@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:developer' as developer;
 import '../config.dart';
+import '../globals.dart';
 
 void log(String message) {
   developer.log(message, name: 'ShoppingCartPage');
@@ -85,7 +86,7 @@ class ShoppingCartPage extends StatelessWidget {
 
   Future<http.Response> submitOrder(double total) async {
     final order = {
-      'user': 'customer', // 或者其他用户身份
+      'user': globalUser,
       'timestamp': DateTime.now().toIso8601String(),
       'total': total,
       'isSubmitted': true, // 订单已经被提交
