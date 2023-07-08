@@ -282,6 +282,34 @@ def serve_order_item():
         else:
             return jsonify({'message': 'Order not found'})
 
+@app.route('/users', methods=['GET'])
+def get_users():
+    with app.app_context():
+        user_items = User.query.all()
+        users = [item.serialize() for item in user_items]
+        return jsonify(users)
+
+@app.route('/users/<int:user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    with app.app_context():
+        user = User.query.get(user_id)
+        if user:
+            db.session.delete(user)
+            db.session.commit()
+            return jsonify({'message': 'User deleted successfully'})
+        else:
+            return jsonify({'message': 'User not found'}), 404
+
+@app.route('/orders/<int:order_id>', methods=['DELETE'])
+def delete_order(order_id):
+    order = Order.query.get(order_id)
+    if order is None:
+        return jsonify({'error': 'Order not found'}), 404
+
+    db.session.delete(order)
+    db.session.commit()
+
+    return jsonify({'message': 'Order deleted successfully'}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)

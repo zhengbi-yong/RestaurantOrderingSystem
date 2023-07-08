@@ -14,6 +14,14 @@ class User(db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
+    def serialize(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'identity': self.identity,
+            # include any other fields you want
+        }
 
 class MenuItem(db.Model):
     __tablename__ = 'menu_items'

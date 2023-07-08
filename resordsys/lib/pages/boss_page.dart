@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'menuitemmanage_page.dart';
+import 'ordermanage_page.dart';
+import 'usermanage_page.dart';
 import 'dart:developer' as developer;
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../config.dart';
@@ -101,6 +103,26 @@ class _BossPageState extends State<BossPage> {
                 );
               },
               child: Text('菜品管理'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => UserManagePage()), // 跳转到用户管理页面
+                );
+              },
+              child: Text('用户管理'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => OrderManagePage()), // 跳转到订单管理页面
+                );
+              },
+              child: Text('订单管理'),
             ),
           ],
         ),
