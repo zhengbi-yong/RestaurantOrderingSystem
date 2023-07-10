@@ -103,7 +103,7 @@ class _WaiterPageState extends State<WaiterPage> {
         itemBuilder: (ctx, index) {
           final order = orders[index];
           return ExpansionTile(
-            title: Text('订单: ${order['id']}'),
+            title: Text('${order['user']} 的订单'),
             children: [
               ...(order['items'] as Map<String, dynamic>).entries.map((item) {
                 Color backgroundColor = Colors.white;

@@ -57,8 +57,13 @@ class _CustomerPageState extends State<CustomerPage> {
         title: Text('海底世界海景餐厅'),
       ),
       body: ListView.builder(
-        itemCount: menuItems.length,
+        itemCount: menuItems.length + 1, // 注意这里 itemCount 加 1
         itemBuilder: (ctx, index) {
+          // 如果是最后一个，返回一个空白的容器
+          if (index == menuItems.length) {
+            return Container(height: 80.0); // 你可以调整这个高度来满足你的需求
+          }
+
           final menuItem = menuItems[index];
           final orderCount = orderItems[menuItem['name']] ?? 0;
           return ListTile(
@@ -95,6 +100,11 @@ class _CustomerPageState extends State<CustomerPage> {
           );
         },
       ),
+      bottomNavigationBar: BottomAppBar(
+        shape: CircularNotchedRectangle(),
+        child: Container(height: 60.0),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(

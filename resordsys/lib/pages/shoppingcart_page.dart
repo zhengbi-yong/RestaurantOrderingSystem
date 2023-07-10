@@ -38,48 +38,41 @@ class ShoppingCartPage extends StatelessWidget {
       appBar: AppBar(
         title: Text('购物车'),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: orderItems.length,
-              itemBuilder: (ctx, index) {
-                final name = orderItems.keys.elementAt(index);
-                final count = orderItems[name];
-                return ListTile(
-                  title: Text(name),
-                  trailing: Text('x$count'),
-                );
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('总价: ${total.toStringAsFixed(0)} 元'),
-                ElevatedButton(
-                  onPressed: () async {
-                    var response = await submitOrder(total);
-                    if (response.statusCode == 200) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('订单已提交')),
-                      );
-                      orderItems.clear();
-                      Navigator.pushNamed(context, '/customer_page');
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('提交订单失败')),
-                      );
-                    }
-                  },
-                  child: Text('提交订单'),
-                ),
-              ],
-            ),
-          ),
-        ],
+      body: ListView.builder(
+        itemCount: orderItems.length,
+        itemBuilder: (ctx, index) {
+          final name = orderItems.keys.elementAt(index);
+          final count = orderItems[name];
+          return ListTile(
+            title: Text(name),
+            trailing: Text('x$count'),
+          );
+        },
+      ),
+      bottomNavigationBar: BottomAppBar(
+        shape: CircularNotchedRectangle(),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text('总价: ${total.toStringAsFixed(0)} 元'),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          var response = await submitOrder(total);
+          if (response.statusCode == 200) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('订单已提交')),
+            );
+            orderItems.clear();
+            Navigator.pushNamed(context, '/customer_page');
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('提交订单失败')),
+            );
+          }
+        },
+        child: Icon(Icons.shopping_cart),
       ),
     );
   }

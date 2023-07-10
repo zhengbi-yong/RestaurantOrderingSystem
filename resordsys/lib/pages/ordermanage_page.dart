@@ -76,7 +76,7 @@ class _OrderManagePageState extends State<OrderManagePage> {
                 var order = snapshot.data![index];
                 return Card(
                   child: ListTile(
-                    title: Text('订单 ${order['id']}'),
+                    title: Text('${order['user']} 的订单'),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [

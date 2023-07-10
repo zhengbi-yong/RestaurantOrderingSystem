@@ -5,23 +5,63 @@ import 'register_page.dart';
 import 'dart:developer' as developer;
 import '../config.dart';
 import '../globals.dart';
+import 'package:provider/provider.dart';
+import '../main.dart';
 
 void log(String message) {
   developer.log(message, name: 'LoginPage');
 }
 
 class LoginPage extends StatefulWidget {
+  final String? initialUsername;
+  final String? initialPassword;
+  LoginPage({this.initialUsername, this.initialPassword});
   @override
   _LoginPageState createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
+  late final _usernameController;
+  late final _passwordController;
   String dropdownValue = '顾客';
+
+  @override
+  void initState() {
+    super.initState();
+    _usernameController = TextEditingController();
+    _passwordController = TextEditingController();
+
+    Future.delayed(Duration.zero, () {
+      if (globalUrl != null) {
+        final loginInfo = Provider.of<LoginInfo>(context, listen: false);
+        final uri = Uri.parse(globalUrl!);
+        if (uri.hasQuery) {
+          final params = uri.queryParameters;
+          if (params.containsKey('username') &&
+              params.containsKey('password')) {
+            loginInfo.update(params['username'], params['password']);
+            login(loginInfo.username!, loginInfo.password!);
+            globalUrl = null;
+          }
+        }
+      }
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final loginInfo = Provider.of<LoginInfo>(context, listen: false);
+    _usernameController.text = loginInfo.username ?? '';
+    _passwordController.text = loginInfo.password ?? '';
+    if (loginInfo.username != null && loginInfo.password != null) {
+      login(loginInfo.username!, loginInfo.password!);
+    }
+  }
 
   Future<void> login(String username, String password) async {
     log('请求登录');
+    // await Future.delayed(Duration(seconds: 1)); // 添加延时，单位为秒
     final response = await http.post(
       Uri.parse('${Config.API_URL}/login'),
       headers: <String, String>{

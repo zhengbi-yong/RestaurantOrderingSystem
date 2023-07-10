@@ -75,7 +75,7 @@ class _ChefPageState extends State<ChefPage> {
           return Material(
             color: Colors.transparent,
             child: ExpansionTile(
-              title: Text('订单: ${order['id']}'),
+              title: Text('${order['user']} 的订单'),
               children: order['items'].entries.map<Widget>((itemEntry) {
                 var itemName = itemEntry.key;
                 var itemDetails = itemEntry.value;
