@@ -68,7 +68,7 @@ class _CustomerPageState extends State<CustomerPage> {
           final orderCount = orderItems[menuItem['name']] ?? 0;
           return ListTile(
             title: Text(menuItem['name']),
-            subtitle: Text('\$${menuItem['price']} 元'),
+            subtitle: Text('${menuItem['price']} 元'),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [

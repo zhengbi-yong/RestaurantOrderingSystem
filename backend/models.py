@@ -28,7 +28,7 @@ class MenuItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     price = db.Column(db.Float, nullable=False)
-
+    category = db.Column(db.String(100), nullable=False)
     def serialize(self):
         return {
             'id': self.id,
@@ -43,10 +43,11 @@ class Order(db.Model):
     user = db.Column(db.String(100), nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False)
     total = db.Column(db.Float, nullable=False)
-    isSubmitted = db.Column(db.Boolean, default=False)  # 新增字段，表示订单是否已提交
-    isConfirmed = db.Column(db.Boolean, default=False)  # 新增字段，表示订单是否已确认
-    isCompleted = db.Column(db.Boolean, default=False)  # 新增字段，表示订单是否已完成
-    items = db.Column(db.String(5000), nullable=False)  # 我们将把菜品信息保存为字符串，其中每个菜品也有一个状态字段表示是否已完成
+    isSubmitted = db.Column(db.Boolean, default=False)
+    isConfirmed = db.Column(db.Boolean, default=False)
+    isCompleted = db.Column(db.Boolean, default=False)
+    isPaid = db.Column(db.Boolean, default=False)  # 新增字段，表示订单是否已付款
+    items = db.Column(db.String(5000), nullable=False)
 
     def serialize(self):
         return {
@@ -57,5 +58,7 @@ class Order(db.Model):
             'isSubmitted': self.isSubmitted,
             'isConfirmed': self.isConfirmed,
             'isCompleted': self.isCompleted,
+            'isPaid': self.isPaid,  # 新增字段，表示订单是否已付款
             'items': json.loads(self.items)
         }
+

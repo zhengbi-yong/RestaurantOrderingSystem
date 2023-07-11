@@ -187,7 +187,8 @@ def add_order():
         items=json.dumps(data['items']),
         isSubmitted=data.get('isSubmitted', False),
         isConfirmed=data.get('isConfirmed', False),
-        isCompleted=data.get('isCompleted', False)
+        isCompleted=data.get('isCompleted', False),
+        isPaid=data.get('isPaid', False)
     )
     with app.app_context():
         db.session.add(new_order)
@@ -209,9 +210,10 @@ def get_orders():
 def get_submitted_orders():
     with app.app_context():
         order_items = Order.query.filter_by(
-            isSubmitted=True, isCompleted=False).all()
+            isSubmitted=True, isPaid=False).all()  # 修改这里，返回所有已提交且未支付的订单
         orders = [item.serialize() for item in order_items]
         return jsonify(orders)
+
 
 
 @app.route('/orders/confirmed', methods=['GET'])
@@ -324,6 +326,21 @@ def modify_order(order_id):
     db.session.commit()
 
     return jsonify({'message': 'Order modified successfully'}), 200
+
+@app.route('/orders/pay', methods=['POST'])
+def pay_order():
+    data = request.get_json()
+    order_id = data['id']
+    with app.app_context():
+        order = Order.query.get(order_id)
+        if order:
+            order.isPaid = True
+            db.session.commit()
+            socketio.emit('order paid', {'order_id': order_id})  # 发送订单已支付的事件
+            return jsonify({'message': 'Order paid successfully'}), 200
+        else:
+            return jsonify({'message': 'Order not found'})
+
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -33,10 +33,6 @@ class _WaiterPageState extends State<WaiterPage> {
     // 连接到服务器
     socket?.connect();
 
-    // 当服务器发送 'order confirmed' 事件时触发
-    socket?.on('order confirmed', (_) {
-      fetchOrders();
-    });
     // 当服务器发送 'new order' 事件时触发
     socket?.on('new order', (_) {
       fetchOrders();
@@ -92,6 +88,19 @@ class _WaiterPageState extends State<WaiterPage> {
     }
   }
 
+  Future<void> payOrder(int id) async {
+    final response = await http.post(
+      Uri.parse('${Config.API_URL}/orders/pay'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'id': id}),
+    );
+    if (response.statusCode == 200) {
+      fetchOrders();
+    } else {
+      print('支付订单失败');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -102,44 +111,73 @@ class _WaiterPageState extends State<WaiterPage> {
         itemCount: orders.length,
         itemBuilder: (ctx, index) {
           final order = orders[index];
-          return ExpansionTile(
-            title: Text('${order['user']} 的订单'),
-            children: [
-              ...(order['items'] as Map<String, dynamic>).entries.map((item) {
-                Color backgroundColor = Colors.white;
-                if (item.value['isPrepared'] && !item.value['isServed']) {
-                  backgroundColor = Colors.green.withOpacity(0.5);
-                } else if (item.value['isServed']) {
-                  backgroundColor = Colors.blue.withOpacity(0.5);
-                }
-                return Container(
-                  color: backgroundColor,
-                  child: ListTile(
-                    title: Text(item.key),
-                    subtitle: Text(
-                        '${item.value['count']} x \$${item.value['price']}'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(item.value['isPrepared'] ? '已就绪' : '准备中'),
-                        if (item.value['isPrepared'] && !item.value['isServed'])
-                          TextButton(
-                            onPressed: () => serveItem(order['id'], item.key),
-                            child: Text('确认上菜'),
-                          ),
-                        Text(item.value['isServed'] ? '已上菜' : '未上菜'),
-                      ],
+
+          bool allItemsServed = (order['items'] as Map<String, dynamic>)
+              .values
+              .every((item) => item['isServed']);
+
+          // The order should disappear only when it's paid.
+          // So we check for isPaid here instead of checking all the states.
+          if (order['isPaid']) {
+            return SizedBox.shrink();
+          }
+
+          Color orderColor =
+              allItemsServed ? Colors.green.withOpacity(0.5) : Colors.white;
+
+          return Container(
+            color: orderColor,
+            child: ExpansionTile(
+              title: Text('${order['user']} 的订单'),
+              children: [
+                ...(order['items'] as Map<String, dynamic>).entries.map((item) {
+                  Color backgroundColor;
+                  if (!item.value['isPrepared']) {
+                    backgroundColor = Colors.yellow.withOpacity(0.5);
+                  } else if (item.value['isPrepared'] &&
+                      !item.value['isServed']) {
+                    backgroundColor = Colors.green.withOpacity(0.5);
+                  } else {
+                    backgroundColor = Colors.blue.withOpacity(0.5);
+                  }
+
+                  return Container(
+                    color: backgroundColor,
+                    child: ListTile(
+                      title: Text(item.key),
+                      subtitle: Text(
+                          '${item.value['count']} x \$${item.value['price']}'),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(item.value['isPrepared'] ? '已就绪' : '准备中'),
+                          if (item.value['isPrepared'] &&
+                              !item.value['isServed'])
+                            TextButton(
+                              onPressed: () => serveItem(order['id'], item.key),
+                              child: Text('确认上菜'),
+                            ),
+                          Text(item.value['isServed'] ? '已上菜' : '未上菜'),
+                        ],
+                      ),
                     ),
+                  );
+                }).toList(),
+                ElevatedButton(
+                  onPressed: () => confirmOrder(order['id']),
+                  child: Text('确认订单'),
+                ),
+                // Only show the pay button when all items are served and the order is not yet paid.
+                if (allItemsServed && !order['isPaid'])
+                  ElevatedButton(
+                    onPressed: () => payOrder(order['id']),
+                    child: Text('确认付款'),
                   ),
-                );
-              }).toList(),
-              ElevatedButton(
-                onPressed: () => confirmOrder(order['id']),
-                child: Text('确认订单'),
-              ),
-              Text(
-                  '订单状态:${order['isSubmitted'] ? '已提交' : '未提交'} / ${order['isConfirmed'] ? '已确认' : '未确认'} / ${order['isCompleted'] ? '已完成' : '未完成'}'),
-            ],
+                Text(
+                    '订单状态:${order['isSubmitted'] ? '已提交' : '未提交'} / ${order['isConfirmed'] ? '已确认' : '未确认'} / ${order['isCompleted'] ? '已完成' : '未完成'} / ${order['isPaid'] ? '已付款' : '未付款'}'),
+                Text('订单总额: ${order['total']} 元'),
+              ],
+            ),
           );
         },
       ),
