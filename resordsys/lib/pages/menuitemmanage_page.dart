@@ -25,6 +25,27 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
     futureMenuItems = fetchMenuItems();
   }
 
+  Future<void> updateMenuItem(int itemId, String name, String price) async {
+    final response = await http.put(
+      Uri.parse('${Config.API_URL}/menu/$itemId'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'name': name,
+        'price': price,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update menu item');
+    }
+
+    setState(() {
+      futureMenuItems = fetchMenuItems();
+    });
+  }
+
   Future<List> fetchMenuItems() async {
     final response = await http.get(Uri.parse('${Config.API_URL}/menu'));
     if (response.statusCode == 200) {
@@ -62,6 +83,66 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
     setState(() {
       futureMenuItems = fetchMenuItems();
     });
+  }
+
+  void showUpdateMenuItemDialog(
+      BuildContext context, int itemId, String name, String price) {
+    _nameController.text = name;
+    _priceController.text = price;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('修改菜品'),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              children: <Widget>[
+                TextFormField(
+                  controller: _nameController,
+                  decoration: InputDecoration(hintText: '菜名'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return '请输入菜名';
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _priceController,
+                  decoration: InputDecoration(hintText: '价格'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return '请输入价格';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('取消'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('提交'),
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  updateMenuItem(
+                      itemId, _nameController.text, _priceController.text);
+                  Navigator.of(context).pop();
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void showAddMenuItemDialog(BuildContext context) {
@@ -138,14 +219,31 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
                     title: Text(menuItem['name']),
                     subtitle:
                         Text('\$${menuItem['price'].toStringAsFixed(0)} 元'),
-                    trailing: ElevatedButton(
-                      onPressed: () async {
-                        await deleteMenuItem(menuItem['id']);
-                        setState(() {
-                          snapshot.data!.removeAt(index);
-                        });
-                      },
-                      child: Text('删除'),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        ElevatedButton(
+                          onPressed: () async {
+                            await deleteMenuItem(menuItem['id']);
+                            setState(() {
+                              snapshot.data!.removeAt(index);
+                            });
+                          },
+                          child: Text('删除'),
+                        ),
+                        SizedBox(
+                            width: 10), // Add some space between the buttons
+                        ElevatedButton(
+                          onPressed: () {
+                            showUpdateMenuItemDialog(
+                                context,
+                                menuItem['id'],
+                                menuItem['name'],
+                                menuItem['price'].toStringAsFixed(0));
+                          },
+                          child: Text('修改'),
+                        ),
+                      ],
                     ),
                   ),
                 );

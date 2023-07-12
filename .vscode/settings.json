@@ -3,5 +3,6 @@
     "editor.defaultFormatter": "ms-python.autopep8"
   },
   "python.formatting.provider": "none",
-  "python.linting.enabled": false
+  "python.linting.enabled": false,
+  "cmake.sourceDirectory": "C:/Sisyphus/Projects/RestaurantOrderingSystem/resordsys/linux"
 }

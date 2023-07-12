@@ -85,6 +85,7 @@ class ShoppingCartPage extends StatelessWidget {
       'isSubmitted': true, // 订单已经被提交
       'isConfirmed': false, // 订单尚未被确认
       'isCompleted': false, // 订单尚未完成
+      'isPaid': false, // 订单尚未支付
       'items': orderItems.map((name, count) => MapEntry(name, {
             'count': count,
             'price':

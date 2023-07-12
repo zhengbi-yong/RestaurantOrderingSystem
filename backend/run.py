@@ -16,8 +16,15 @@ import time
 from database import db
 import sys
 from flask_socketio import SocketIO, emit
-
-
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.header import Header
+import smtplib
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from email.mime.base import MIMEBase
+from email import encoders
 # 创建日志记录器
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -161,6 +168,25 @@ def add_menu_item():
         db.session.add(new_item)
         db.session.commit()
     return jsonify({'message': 'Menu item added successfully'})
+
+@app.route('/menu/<int:item_id>', methods=['PUT'])
+def update_menu_item(item_id):
+    data = request.get_json()
+    name = data.get('name')
+    price = data.get('price')
+
+    with app.app_context():
+        item = MenuItem.query.get(item_id)
+        if item:
+            if name is not None:
+                item.name = name
+            if price is not None:
+                item.price = price
+            db.session.commit()
+            return jsonify({'message': 'Menu item updated successfully'})
+        else:
+            return jsonify({'message': 'Menu item not found'}), 404
+
 
 
 @app.route('/menu/<int:item_id>', methods=['DELETE'])
@@ -340,6 +366,89 @@ def pay_order():
             return jsonify({'message': 'Order paid successfully'}), 200
         else:
             return jsonify({'message': 'Order not found'})
+        
+# @app.route('/orders/print', methods=['POST'])
+# def print_order():
+#     data = request.get_json()
+#     order_id = data['id']
+#     with app.app_context():
+#         order = Order.query.get(order_id)
+#         if order:
+#             msg = MIMEMultipart()
+#             msg['From'] = 'haidishijierestaurant@outlook.com'
+#             msg['To'] = 'jcc8792vm3h5e8@print.rpt.epson.com.cn'
+#             msg['Subject'] = 'Print order'
+
+#             body = f"""
+#             Order ID: {order.id}
+#             User: {order.user}
+#             Total: {order.total}
+#             Items: {order.items}
+#             """
+#             msg.attach(MIMEText(body, 'plain'))
+
+#             server = smtplib.SMTP('smtp.office365.com', 587)
+#             server.starttls()
+#             server.login('haidishijierestaurant@outlook.com', 'Haidishijie')
+#             text = msg.as_string()
+#             server.sendmail('haidishijierestaurant@outlook.com', 'jcc8792vm3h5e8@print.rpt.epson.com.cn', text)
+#             server.quit()
+
+#             return jsonify({'message': 'Print request sent'}), 200
+#         else:
+#             return jsonify({'message': 'Order not found'}), 404
+
+@app.route('/orders/print', methods=['POST'])
+def print_order():
+    data = request.get_json()
+    order_id = data['id']
+    with app.app_context():
+        order = Order.query.get(order_id)
+        if order:
+            # Create a new PDF with Reportlab
+            c = canvas.Canvas("order.pdf", pagesize=letter)
+            width, height = letter
+
+            # Add order information to the PDF
+            c.drawString(30, height - 30, f"Order ID: {order.id}")
+            c.drawString(30, height - 60, f"User: {order.user}")
+            c.drawString(30, height - 90, f"Total: {order.total}")
+            
+            order_info = json.loads(order.items)
+            for i, (item_name, item_info) in enumerate(order_info.items()):
+                # Use dict.get() to provide a default value for 'quantity'
+                quantity = item_info.get('quantity', 'N/A')
+                c.drawString(30, height - 120 - i*30, f"{item_name} x {quantity}")
+
+            # Save the PDF
+            c.save()
+
+            # Prepare the email
+            msg = MIMEMultipart()
+            msg['From'] = 'haidishijierestaurant@outlook.com'
+            msg['To'] = 'jcc8792vm3h5e8@print.rpt.epson.com.cn'
+            msg['Subject'] = 'Print order'
+
+            # Attach the PDF to the email
+            with open("order.pdf", "rb") as f:
+                attach = MIMEBase('application', 'octet-stream')
+                attach.set_payload(f.read())
+            encoders.encode_base64(attach)
+            attach.add_header('Content-Disposition', 'attachment', filename=str(order.id) + "_order.pdf")
+            msg.attach(attach)
+
+            # Send the email
+            server = smtplib.SMTP('smtp.office365.com', 587)
+            server.starttls()
+            server.login('haidishijierestaurant@outlook.com', 'Haidishijie')
+            server.sendmail('haidishijierestaurant@outlook.com', 'jcc8792vm3h5e8@print.rpt.epson.com.cn', msg.as_string())
+            server.quit()
+
+            return jsonify({'message': 'Print request sent'}), 200
+        else:
+            return jsonify({'message': 'Order not found'}), 404
+
+
 
 
 if __name__ == '__main__':
