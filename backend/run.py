@@ -163,7 +163,7 @@ def get_menu():
 def add_menu_item():
     logger.debug(f'添加菜单项')
     data = request.get_json()
-    new_item = MenuItem(name=data['name'], price=data['price'])
+    new_item = MenuItem(name=data['name'], price=data['price'],category=data['category'])
     with app.app_context():
         db.session.add(new_item)
         db.session.commit()
@@ -174,6 +174,7 @@ def update_menu_item(item_id):
     data = request.get_json()
     name = data.get('name')
     price = data.get('price')
+    category = data.get('category')
 
     with app.app_context():
         item = MenuItem.query.get(item_id)
@@ -182,6 +183,8 @@ def update_menu_item(item_id):
                 item.name = name
             if price is not None:
                 item.price = price
+            if category is not None:
+                item.category = category
             db.session.commit()
             return jsonify({'message': 'Menu item updated successfully'})
         else:

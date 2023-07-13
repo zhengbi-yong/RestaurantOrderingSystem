@@ -18,6 +18,7 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _priceController = TextEditingController();
+  final _categoryController = TextEditingController();
 
   @override
   void initState() {
@@ -25,7 +26,8 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
     futureMenuItems = fetchMenuItems();
   }
 
-  Future<void> updateMenuItem(int itemId, String name, String price) async {
+  Future<void> updateMenuItem(
+      int itemId, String name, String price, String category) async {
     final response = await http.put(
       Uri.parse('${Config.API_URL}/menu/$itemId'),
       headers: <String, String>{
@@ -34,6 +36,7 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
       body: jsonEncode(<String, String>{
         'name': name,
         'price': price,
+        'category': category, // 添加类别
       }),
     );
 
@@ -64,7 +67,7 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
     }
   }
 
-  Future<void> addMenuItem(String name, String price) async {
+  Future<void> addMenuItem(String name, String price, String category) async {
     final response = await http.post(
       Uri.parse('${Config.API_URL}/menu'),
       headers: <String, String>{
@@ -73,6 +76,7 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
       body: jsonEncode(<String, String>{
         'name': name,
         'price': price,
+        'category': category, // 添加类别
       }),
     );
 
@@ -85,10 +89,11 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
     });
   }
 
-  void showUpdateMenuItemDialog(
-      BuildContext context, int itemId, String name, String price) {
+  void showUpdateMenuItemDialog(BuildContext context, int itemId, String name,
+      String price, String category) {
     _nameController.text = name;
     _priceController.text = price;
+    _categoryController.text = category; // 添加类别
 
     showDialog(
       context: context,
@@ -119,6 +124,17 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
                     return null;
                   },
                 ),
+                TextFormField(
+                  controller:
+                      _categoryController, // 需要创建一个新的 TextEditingController
+                  decoration: InputDecoration(hintText: '类别'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return '请输入类别';
+                    }
+                    return null;
+                  },
+                ),
               ],
             ),
           ),
@@ -133,8 +149,8 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
               child: Text('提交'),
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
-                  updateMenuItem(
-                      itemId, _nameController.text, _priceController.text);
+                  updateMenuItem(itemId, _nameController.text,
+                      _priceController.text, _categoryController.text);
                   Navigator.of(context).pop();
                 }
               },
@@ -175,6 +191,17 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
                     return null;
                   },
                 ),
+                TextFormField(
+                  controller:
+                      _categoryController, // 需要创建一个新的 TextEditingController
+                  decoration: InputDecoration(hintText: '类别'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return '请输入类别';
+                    }
+                    return null;
+                  },
+                ),
               ],
             ),
           ),
@@ -189,7 +216,8 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
               child: Text('添加'),
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
-                  addMenuItem(_nameController.text, _priceController.text);
+                  addMenuItem(_nameController.text, _priceController.text,
+                      _categoryController.text);
                   Navigator.of(context).pop();
                 }
               },
@@ -239,7 +267,8 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
                                 context,
                                 menuItem['id'],
                                 menuItem['name'],
-                                menuItem['price'].toStringAsFixed(0));
+                                menuItem['price'].toStringAsFixed(0),
+                                menuItem['category']);
                           },
                           child: Text('修改'),
                         ),

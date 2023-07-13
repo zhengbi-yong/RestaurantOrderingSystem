@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../config.dart';
+import 'waiterorder_page.dart';
 
 IO.Socket? socket;
 
@@ -180,6 +181,17 @@ class _WaiterPageState extends State<WaiterPage> {
             ),
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => WaiterOrderPage()), // 这里跳转到新的页面
+          );
+        },
+        child: Icon(Icons.add),
+        tooltip: '帮忙点菜',
       ),
     );
   }

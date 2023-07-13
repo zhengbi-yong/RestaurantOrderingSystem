@@ -33,7 +33,8 @@ class MenuItem(db.Model):
         return {
             'id': self.id,
             'name': self.name,
-            'price': self.price
+            'price': self.price,
+            'category': self.category
         }
 
 
