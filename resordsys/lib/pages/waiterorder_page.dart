@@ -4,7 +4,10 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../config.dart';
-import 'waiterorder_page.dart';
+
+void log(String message) {
+  developer.log(message, name: 'WaiterOrderPage');
+}
 
 class WaiterOrderPage extends StatefulWidget {
   @override
@@ -27,6 +30,9 @@ class _WaiterOrderPageState extends State<WaiterOrderPage> {
     if (response.statusCode == 200) {
       setState(() {
         menuItems = jsonDecode(response.body);
+        // 对菜品列表按照 'category' 字段进行排序
+        menuItems.sort(
+            (a, b) => (a['category'] ?? '其他').compareTo(b['category'] ?? '其他'));
       });
     } else {
       print('获取菜单失败');
@@ -51,15 +57,31 @@ class _WaiterOrderPageState extends State<WaiterOrderPage> {
           }))
     };
 
-    return await http.post(
+    final response = await http.post(
       Uri.parse('${Config.API_URL}/orders'), // 修改为后端接口地址
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(order),
     );
+
+    if (response.statusCode == 200) {
+      Navigator.pop(context); // 如果订单提交成功，返回上一个页面
+    }
+
+    return response;
   }
 
   @override
   Widget build(BuildContext context) {
+    // 对menuItems进行分组，以类别作为key，对应类别的菜品作为value
+    Map<String, List<dynamic>> groupedMenuItems = {};
+
+    for (var menuItem in menuItems) {
+      if (!groupedMenuItems.containsKey(menuItem['category'])) {
+        groupedMenuItems[menuItem['category']] = [];
+      }
+      groupedMenuItems[menuItem['category']]?.add(menuItem);
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text('服务员帮忙点菜'),
@@ -74,47 +96,58 @@ class _WaiterOrderPageState extends State<WaiterOrderPage> {
           ),
           Expanded(
             child: ListView.builder(
-              itemCount: menuItems.length + 1, // 注意这里 itemCount 加 1
+              itemCount: groupedMenuItems.keys.length,
               itemBuilder: (ctx, index) {
-                // 如果是最后一个，返回一个空白的容器
-                if (index == menuItems.length) {
-                  return Container(height: 80.0); // 你可以调整这个高度来满足你的需求
-                }
+                String category = groupedMenuItems.keys.elementAt(index);
+                List<dynamic> categoryMenuItems =
+                    groupedMenuItems[category] ?? [];
 
-                final menuItem = menuItems[index];
-                final orderCount = orderItems[menuItem['name']] ?? 0;
-                return ListTile(
-                  title: Text(menuItem['name']),
-                  subtitle: Text('${menuItem['price']} 元'),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.remove),
-                        onPressed: () {
-                          if (orderCount > 0) {
-                            setState(() {
-                              if (orderCount - 1 == 0) {
-                                orderItems
-                                    .remove(menuItem['name']); // 如果数量为0，移除这个菜品
-                              } else {
-                                orderItems[menuItem['name']] = orderCount - 1;
-                              }
-                            });
-                          }
-                        },
-                      ),
-                      Text('$orderCount'),
-                      IconButton(
-                        icon: Icon(Icons.add),
-                        onPressed: () {
-                          setState(() {
-                            orderItems[menuItem['name']] = orderCount + 1;
-                          });
-                        },
-                      ),
-                    ],
+                return ExpansionTile(
+                  title: Text(
+                    category ?? '其他',
+                    style: TextStyle(
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue, // 类别名颜色修改为蓝色
+                    ),
                   ),
+                  children: categoryMenuItems.map((menuItem) {
+                    final orderCount = orderItems[menuItem['name']] ?? 0;
+                    return ListTile(
+                      title: Text(menuItem['name']),
+                      subtitle: Text('${menuItem['price']} 元'),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.remove),
+                            onPressed: () {
+                              if (orderCount > 0) {
+                                setState(() {
+                                  if (orderCount - 1 == 0) {
+                                    orderItems.remove(
+                                        menuItem['name']); // 如果数量为0，移除这个菜品
+                                  } else {
+                                    orderItems[menuItem['name']] =
+                                        orderCount - 1;
+                                  }
+                                });
+                              }
+                            },
+                          ),
+                          Text('$orderCount'),
+                          IconButton(
+                            icon: Icon(Icons.add),
+                            onPressed: () {
+                              setState(() {
+                                orderItems[menuItem['name']] = orderCount + 1;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
                 );
               },
             ),

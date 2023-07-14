@@ -55,41 +55,38 @@ class _CustomerPageState extends State<CustomerPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 对menuItems进行分组，以类别作为key，对应类别的菜品作为value
+    Map<String, List<dynamic>> groupedMenuItems = {};
+
+    for (var menuItem in menuItems) {
+      if (!groupedMenuItems.containsKey(menuItem['category'])) {
+        groupedMenuItems[menuItem['category']] = [];
+      }
+      groupedMenuItems[menuItem['category']]?.add(menuItem);
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text('海底世界海景餐厅'),
       ),
       body: ListView.builder(
-        itemCount: menuItems.length + 1,
+        itemCount: groupedMenuItems.keys.length,
         itemBuilder: (ctx, index) {
-          // 如果是最后一个，返回一个空白的容器
-          if (index == menuItems.length) {
-            return Container(height: 80.0);
-          }
+          String category = groupedMenuItems.keys.elementAt(index);
+          List<dynamic> categoryMenuItems = groupedMenuItems[category] ?? [];
 
-          final menuItem = menuItems[index];
-          final orderCount = orderItems[menuItem['name']] ?? 0;
-
-          // 检查是否需要插入新的标题
-          bool isNewCategory = index == 0 ||
-              (menuItem['category'] ?? '其他') !=
-                  (menuItems[index - 1]['category'] ?? '其他');
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 如果是新的类别，就添加一个标题
-              if (isNewCategory)
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 8.0, horizontal: 16.0),
-                  child: Text(
-                    menuItem['category'] ?? '其他',
-                    style:
-                        TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ListTile(
+          return ExpansionTile(
+            title: Text(
+              category ?? '其他',
+              style: TextStyle(
+                fontSize: 18.0,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue, // 类别名颜色修改为蓝色
+              ),
+            ),
+            children: categoryMenuItems.map((menuItem) {
+              final orderCount = orderItems[menuItem['name']] ?? 0;
+              return ListTile(
                 title: Text(menuItem['name']),
                 subtitle: Text('${menuItem['price']} 元'),
                 trailing: Row(
@@ -120,8 +117,8 @@ class _CustomerPageState extends State<CustomerPage> {
                     ),
                   ],
                 ),
-              ),
-            ],
+              );
+            }).toList(),
           );
         },
       ),

@@ -11,7 +11,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import codecs
 import logging
-from datetime import datetime
+from datetime import datetime, date, timedelta
 import time
 from database import db
 import sys
@@ -349,12 +349,20 @@ def modify_order(order_id):
         return jsonify({'error': 'Order not found'}), 404
 
     updated_order = request.json
+    order.user = updated_order['user']
+    order.timestamp = datetime.strptime(updated_order['timestamp'], "%Y-%m-%dT%H:%M:%S")  # 修改格式字符串
     order.total = updated_order['total']
-    # 更新其他的数据
+    order.isSubmitted = updated_order['isSubmitted']
+    order.isConfirmed = updated_order['isConfirmed']
+    order.isCompleted = updated_order['isCompleted']
+    order.isPaid = updated_order['isPaid']
+    order.items = json.dumps(updated_order['items'])
 
     db.session.commit()
+    socketio.emit('order modified', {'order_id': order_id})
 
     return jsonify({'message': 'Order modified successfully'}), 200
+
 
 @app.route('/orders/pay', methods=['POST'])
 def pay_order():
@@ -451,7 +459,34 @@ def print_order():
         else:
             return jsonify({'message': 'Order not found'}), 404
 
+@app.route('/summary', methods=['GET'])
+def get_summary():
+    # 获取当天的日期
+    today = date.today()
+    start_time = datetime.combine(today, datetime.min.time())
+    end_time = datetime.combine(today, datetime.max.time())
 
+    # 计算当天的营业额
+    revenue_today = db.session.query(db.func.sum(Order.total)).filter(
+        Order.timestamp.between(start_time, end_time),
+        Order.isPaid == True
+    ).scalar() or 0.0
+
+    # 计算用户数量
+    user_count = db.session.query(User).count()
+
+    # 计算菜品数量
+    menu_item_count = db.session.query(MenuItem).count()
+
+    # 计算订单数量
+    order_count = db.session.query(Order).count()
+
+    return jsonify({
+        'revenueToday': revenue_today,
+        'userCount': user_count,
+        'menuItemCount': menu_item_count,
+        'orderCount': order_count,
+    })
 
 
 if __name__ == '__main__':

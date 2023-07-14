@@ -20,13 +20,15 @@ class BossPage extends StatefulWidget {
 }
 
 class _BossPageState extends State<BossPage> {
-  List<dynamic> orders = [];
   double totalRevenue = 0.0;
+  int employeeCount = 0;
+  int menuItemCount = 0;
+  int orderCount = 0;
 
   @override
   void initState() {
     super.initState();
-    fetchOrders();
+    fetchSummaryData();
 
     // 初始化socket连接
     socket = IO.io('${Config.API_URL}', <String, dynamic>{
@@ -39,24 +41,28 @@ class _BossPageState extends State<BossPage> {
 
     // 当服务器发送 'order confirmed' 事件时触发
     socket?.on('order confirmed', (_) {
-      fetchOrders();
+      fetchSummaryData();
     });
     // 当服务器发送 'new order' 事件时触发
     socket?.on('new order', (_) {
-      fetchOrders();
+      fetchSummaryData();
     });
   }
 
-  Future<void> fetchOrders() async {
-    final response = await http.get(Uri.parse('${Config.API_URL}/orders'));
-    // print(response.body);
-    if (response.statusCode == 200) {
+  Future<void> fetchSummaryData() async {
+    final summaryResponse =
+        await http.get(Uri.parse('${Config.API_URL}/summary'));
+
+    if (summaryResponse.statusCode == 200) {
+      var summary = jsonDecode(summaryResponse.body);
       setState(() {
-        orders = jsonDecode(response.body);
-        totalRevenue = orders.fold(0.0, (sum, item) => sum + item['total']);
+        totalRevenue = summary['revenueToday'];
+        employeeCount = summary['employeeCount'];
+        menuItemCount = summary['menuItemCount'];
+        orderCount = summary['orderCount'];
       });
     } else {
-      print('获取订单列表失败');
+      print('获取总览数据失败');
     }
   }
 
@@ -68,28 +74,10 @@ class _BossPageState extends State<BossPage> {
       ),
       body: Column(
         children: [
-          Text('总营业额: ${totalRevenue.toStringAsFixed(0)} 元'),
-          Expanded(
-            child: ListView.builder(
-              itemCount: orders.length,
-              itemBuilder: (ctx, index) {
-                final order = orders[index];
-                return ExpansionTile(
-                  title: Text('${order['user']} 的订单'),
-                  subtitle: Text('总计 ${order['total'].toStringAsFixed(0)} 元'),
-                  children: (order['items'] as Map<String, dynamic>)
-                      .entries
-                      .map<Widget>((item) {
-                    return ListTile(
-                      title: Text(item.key),
-                      subtitle: Text(
-                          '价格: ${item.value['price'].toStringAsFixed(0)} 元, 数量: ${item.value['count']} 份'),
-                    );
-                  }).toList(),
-                );
-              },
-            ),
-          ),
+          Text('当天营业额: ${totalRevenue.toStringAsFixed(0)} 元'),
+          Text('员工人数: $employeeCount'),
+          Text('菜品数量: $menuItemCount'),
+          Text('订单数量: $orderCount'),
         ],
       ),
       bottomNavigationBar: BottomAppBar(

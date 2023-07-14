@@ -7,3 +7,8 @@ docker-compose build --no-cache
 docker-compose up -d
 docker ps
 flutter build web --no-tree-shake-icons --profile --web-renderer html 
+
+# 查看docker缓存
+docker system df
+# 清理缓存
+docker system prune -a --force

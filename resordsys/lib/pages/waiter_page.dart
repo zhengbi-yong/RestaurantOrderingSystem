@@ -5,6 +5,7 @@ import 'dart:developer' as developer;
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../config.dart';
 import 'waiterorder_page.dart';
+import 'editorder_page.dart';
 
 IO.Socket? socket;
 
@@ -164,6 +165,22 @@ class _WaiterPageState extends State<WaiterPage> {
                     ),
                   );
                 }).toList(),
+                ElevatedButton(
+                  onPressed: order['isPaid']
+                      ? null
+                      : () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    EditOrderPage(order)), // 这里跳转到新的页面
+                          ).then((_) {
+                            // 当从修改订单页面返回时，重新获取订单数据
+                            fetchOrders();
+                          });
+                        },
+                  child: Text('修改订单'),
+                ),
                 ElevatedButton(
                   onPressed: () => confirmOrder(order['id']),
                   child: Text('确认订单'),
