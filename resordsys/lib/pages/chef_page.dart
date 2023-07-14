@@ -69,7 +69,9 @@ class _ChefPageState extends State<ChefPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('厨师'),
+        title: Text('厨师',
+            style: TextStyle(color: Colors.white, fontSize: 20)), // 修改标题颜色和字体大小
+        backgroundColor: Colors.blue, // 修改App Bar背景颜色
       ),
       body: ListView.builder(
         itemCount: orders.length,
@@ -78,7 +80,10 @@ class _ChefPageState extends State<ChefPage> {
           return Material(
             color: Colors.transparent,
             child: ExpansionTile(
-              title: Text('${order['user']} 的订单'),
+              title: Text('${order['user']} 的订单',
+                  style: TextStyle(
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.bold)), // 修改字体大小和样式
               children: order['items'].entries.map<Widget>((itemEntry) {
                 var itemName = itemEntry.key;
                 var itemDetails = itemEntry.value;
@@ -89,8 +94,10 @@ class _ChefPageState extends State<ChefPage> {
                   color: backgroundColor,
                   child: Card(
                     child: ListTile(
-                      title: Text(itemName),
-                      subtitle: Text(itemDetails['isPrepared'] ? '已备菜' : '未备菜'),
+                      title: Text(itemName,
+                          style: TextStyle(fontSize: 16)), // 修改字体大小
+                      subtitle: Text(itemDetails['isPrepared'] ? '已备菜' : '未备菜',
+                          style: TextStyle(fontSize: 14)), // 修改字体大小
                       trailing: !itemDetails['isPrepared']
                           ? ElevatedButton(
                               onPressed: () async {
@@ -110,6 +117,7 @@ class _ChefPageState extends State<ChefPage> {
         },
       ),
       bottomNavigationBar: BottomAppBar(
+        color: Colors.blue, // 修改BottomAppBar颜色为蓝色
         child: Row(
           children: [
             ElevatedButton(
@@ -119,7 +127,11 @@ class _ChefPageState extends State<ChefPage> {
                   MaterialPageRoute(builder: (context) => MenuItemManagePage()),
                 );
               },
-              child: Text('菜品管理'),
+              child: Text('菜品管理',
+                  style: TextStyle(color: Colors.white)), // 修改文字颜色为白色
+              style: ButtonStyle(
+                  backgroundColor:
+                      MaterialStateProperty.all(Colors.orange)), // 修改按钮颜色为橙色
             ),
           ],
         ),

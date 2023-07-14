@@ -56,10 +56,10 @@ class _BossPageState extends State<BossPage> {
     if (summaryResponse.statusCode == 200) {
       var summary = jsonDecode(summaryResponse.body);
       setState(() {
-        totalRevenue = summary['revenueToday'];
-        employeeCount = summary['employeeCount'];
-        menuItemCount = summary['menuItemCount'];
-        orderCount = summary['orderCount'];
+        totalRevenue = summary['revenueToday'] ?? 0.0;
+        employeeCount = summary['employeeCount'] ?? 0;
+        menuItemCount = summary['menuItemCount'] ?? 0;
+        orderCount = summary['orderCount'] ?? 0;
       });
     } else {
       print('获取总览数据失败');
@@ -71,48 +71,69 @@ class _BossPageState extends State<BossPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('老板'),
+        backgroundColor: Colors.deepOrange, // 设置AppBar的颜色
       ),
-      body: Column(
-        children: [
-          Text('当天营业额: ${totalRevenue.toStringAsFixed(0)} 元'),
-          Text('员工人数: $employeeCount'),
-          Text('菜品数量: $menuItemCount'),
-          Text('订单数量: $orderCount'),
-        ],
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('当天营业额: ${totalRevenue.toStringAsFixed(0)} 元',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            SizedBox(height: 10), // 添加一些间距
+            Text('员工人数: $employeeCount', style: TextStyle(fontSize: 18)),
+            SizedBox(height: 10), // 添加一些间距
+            Text('菜品数量: $menuItemCount', style: TextStyle(fontSize: 18)),
+            SizedBox(height: 10), // 添加一些间距
+            Text('订单数量: $orderCount', style: TextStyle(fontSize: 18)),
+          ],
+        ),
       ),
       bottomNavigationBar: BottomAppBar(
-        child: Row(
-          children: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => MenuItemManagePage()),
-                );
-              },
-              child: Text('菜品管理'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => UserManagePage()), // 跳转到用户管理页面
-                );
-              },
-              child: Text('用户管理'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => OrderManagePage()), // 跳转到订单管理页面
-                );
-              },
-              child: Text('订单管理'),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround, // 设置按钮之间的间距
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => MenuItemManagePage()),
+                  );
+                },
+                child: Text('菜品管理'),
+                style: ButtonStyle(
+                    backgroundColor:
+                        MaterialStateProperty.all(Colors.deepOrange)), // 设置按钮颜色
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => UserManagePage()),
+                  );
+                },
+                child: Text('用户管理'),
+                style: ButtonStyle(
+                    backgroundColor:
+                        MaterialStateProperty.all(Colors.deepOrange)), // 设置按钮颜色
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => OrderManagePage()),
+                  );
+                },
+                child: Text('订单管理'),
+                style: ButtonStyle(
+                    backgroundColor:
+                        MaterialStateProperty.all(Colors.deepOrange)), // 设置按钮颜色
+              ),
+            ],
+          ),
         ),
       ),
     );

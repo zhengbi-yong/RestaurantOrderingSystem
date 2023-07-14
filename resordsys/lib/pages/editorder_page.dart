@@ -83,7 +83,9 @@ class _EditOrderPageState extends State<EditOrderPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('修改订单'),
+        title: Text('修改订单',
+            style: TextStyle(color: Colors.white, fontSize: 20)), // 修改标题颜色和字体大小
+        backgroundColor: Colors.orange, // 修改App Bar背景颜色
       ),
       body: ListView(
         children: <Widget>[
@@ -94,6 +96,7 @@ class _EditOrderPageState extends State<EditOrderPage> {
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: '用户',
+                labelStyle: TextStyle(fontSize: 18), // 修改标签字体大小
               ),
             ),
           ),
@@ -114,7 +117,7 @@ class _EditOrderPageState extends State<EditOrderPage> {
                   style: TextStyle(
                     fontSize: 18.0,
                     fontWeight: FontWeight.bold,
-                    color: Colors.blue, // 类别名颜色修改为蓝色
+                    color: Colors.deepPurple, // 类别名颜色修改为深紫色
                   ),
                 ),
                 children: categoryMenuItems.map((menuItem) {
@@ -128,13 +131,16 @@ class _EditOrderPageState extends State<EditOrderPage> {
                     order['items'][menuItem['name']] = orderItem;
                   }
                   return ListTile(
-                    title: Text(menuItem['name']),
-                    subtitle: Text('${menuItem['price']} 元'),
+                    title: Text(menuItem['name'],
+                        style: TextStyle(fontSize: 16)), // 修改菜名字体大小
+                    subtitle: Text('${menuItem['price']} 元',
+                        style: TextStyle(fontSize: 14)), // 修改价格字体大小
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.remove),
+                          icon: Icon(Icons.remove,
+                              color: Colors.red), // 修改减号颜色为红色
                           onPressed: () {
                             if (orderItem['count'] > 0) {
                               setState(() {
@@ -143,9 +149,11 @@ class _EditOrderPageState extends State<EditOrderPage> {
                             }
                           },
                         ),
-                        Text('${orderItem['count']}'),
+                        Text('${orderItem['count']}',
+                            style: TextStyle(fontSize: 16)), // 修改数量字体大小
                         IconButton(
-                          icon: Icon(Icons.add),
+                          icon:
+                              Icon(Icons.add, color: Colors.green), // 修改加号颜色为绿色
                           onPressed: () {
                             setState(() {
                               orderItem['count']++;
@@ -165,6 +173,7 @@ class _EditOrderPageState extends State<EditOrderPage> {
         onPressed: modifyOrder,
         child: Icon(Icons.check),
         tooltip: '确认修改',
+        backgroundColor: Colors.orange, // 修改浮动操作按钮的背景颜色
       ),
     );
   }

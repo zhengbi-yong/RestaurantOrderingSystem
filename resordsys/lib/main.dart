@@ -8,11 +8,7 @@ import 'pages/register_page.dart';
 import 'pages/autologin_page.dart';
 import 'dart:developer' as developer;
 import 'package:provider/provider.dart';
-import 'dart:html' as html;
-import 'globals.dart';
-import 'package:http/http.dart' as http;
 import 'config.dart';
-import 'dart:convert';
 
 void log(String message) {
   developer.log(message, name: 'ResOrdSys');
@@ -50,9 +46,9 @@ class ResOrdSys extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '餐厅订单系统',
+      title: Config.TITLE,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.green,
       ),
       initialRoute: '/',
       onGenerateRoute: (settings) {

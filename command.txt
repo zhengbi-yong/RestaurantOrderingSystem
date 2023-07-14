@@ -3,11 +3,14 @@ cd home
 cd ResOrdSys
 cd RestaurantOrderingSystem
 docker-compose down
-docker-compose build --no-cache
+docker-compose build
 docker-compose up -d
 docker ps
+
+
 flutter build web --no-tree-shake-icons --profile --web-renderer html 
 
+docker-compose build --no-cache
 # 查看docker缓存
 docker system df
 # 清理缓存

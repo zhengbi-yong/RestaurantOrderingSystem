@@ -137,6 +137,7 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  // 在 LoginPage 构建方法中更改样式：
   @override
   Widget build(BuildContext context) {
     log('登录页构建');
@@ -167,19 +168,33 @@ class _LoginPageState extends State<LoginPage> {
             ),
             TextField(
               controller: _usernameController,
-              decoration: InputDecoration(hintText: '用户名'),
+              decoration: InputDecoration(
+                hintText: '用户名',
+                filled: true, // 添加填充
+                fillColor: Colors.grey[200], // 设置填充颜色为浅灰色
+              ),
             ),
+            SizedBox(height: 10), // 添加一些空间
             TextField(
               controller: _passwordController,
-              decoration: InputDecoration(hintText: '密码'),
+              decoration: InputDecoration(
+                hintText: '密码',
+                filled: true, // 添加填充
+                fillColor: Colors.grey[200], // 设置填充颜色为浅灰色
+              ),
               obscureText: true,
             ),
+            SizedBox(height: 20), // 添加一些空间
             ElevatedButton(
               onPressed: () {
                 login(_usernameController.text, _passwordController.text);
               },
               child: Text('登录'),
+              style: ElevatedButton.styleFrom(
+                primary: Color.fromARGB(255, 11, 84, 124), // 更改按钮颜色
+              ),
             ),
+            SizedBox(height: 10), // 添加一些空间
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
@@ -189,6 +204,9 @@ class _LoginPageState extends State<LoginPage> {
                 );
               },
               child: Text('注册'),
+              style: ElevatedButton.styleFrom(
+                primary: const Color.fromARGB(255, 52, 18, 112), // 更改按钮颜色
+              ),
             ),
           ],
         ),

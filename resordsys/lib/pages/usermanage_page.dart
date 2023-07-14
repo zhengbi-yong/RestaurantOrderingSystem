@@ -59,15 +59,51 @@ class _UserManagePageState extends State<UserManagePage> {
                 var user = snapshot.data![index];
                 return Card(
                   child: ListTile(
+                    leading: CircleAvatar(
+                      // If you have a user image, use NetworkImage. If not, you can use placeholder image
+                      // backgroundImage: NetworkImage(user['imageUrl']),
+                      child: Text(
+                        user['username'][0]
+                            .toUpperCase(), // display the first letter of the username
+                        style: TextStyle(fontSize: 24.0),
+                      ),
+                    ),
                     title: Text(user['username']),
-                    trailing: ElevatedButton(
-                      onPressed: () async {
-                        await deleteUser(user['id']);
-                        setState(() {
-                          snapshot.data!.removeAt(index);
-                        });
+                    subtitle: Text(
+                        'Additional User Info'), // You can add more user info here
+                    trailing: IconButton(
+                      icon: Icon(Icons.delete),
+                      color: Colors.red,
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text('Confirm'),
+                              content: Text(
+                                  'Are you sure you want to delete ${user['username']}?'),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: Text('Cancel'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                                TextButton(
+                                  child: Text('Delete'),
+                                  onPressed: () async {
+                                    await deleteUser(user['id']);
+                                    setState(() {
+                                      snapshot.data!.removeAt(index);
+                                    });
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
                       },
-                      child: Text('删除'),
                     ),
                   ),
                 );

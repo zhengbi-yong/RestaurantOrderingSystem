@@ -82,6 +82,14 @@ class _WaiterOrderPageState extends State<WaiterOrderPage> {
       groupedMenuItems[menuItem['category']]?.add(menuItem);
     }
 
+    double total = orderItems.entries.fold(0, (sum, entry) {
+      String name = entry.key;
+      int count = entry.value;
+      double price =
+          menuItems.firstWhere((item) => item['name'] == name)['price'];
+      return sum + price * count;
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: Text('服务员帮忙点菜'),
@@ -92,6 +100,7 @@ class _WaiterOrderPageState extends State<WaiterOrderPage> {
             controller: nameController,
             decoration: InputDecoration(
               hintText: '输入顾客名',
+              contentPadding: EdgeInsets.all(16.0),
             ),
           ),
           Expanded(
@@ -113,38 +122,45 @@ class _WaiterOrderPageState extends State<WaiterOrderPage> {
                   ),
                   children: categoryMenuItems.map((menuItem) {
                     final orderCount = orderItems[menuItem['name']] ?? 0;
-                    return ListTile(
-                      title: Text(menuItem['name']),
-                      subtitle: Text('${menuItem['price']} 元'),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: Icon(Icons.remove),
-                            onPressed: () {
-                              if (orderCount > 0) {
+                    return Card(
+                      child: ListTile(
+                        title: Text(
+                          menuItem['name'],
+                          style: TextStyle(
+                            color: orderCount > 0 ? Colors.green : Colors.black,
+                          ),
+                        ),
+                        subtitle: Text('${menuItem['price']} 元'),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.remove),
+                              onPressed: () {
+                                if (orderCount > 0) {
+                                  setState(() {
+                                    if (orderCount - 1 == 0) {
+                                      orderItems.remove(
+                                          menuItem['name']); // 如果数量为0，移除这个菜品
+                                    } else {
+                                      orderItems[menuItem['name']] =
+                                          orderCount - 1;
+                                    }
+                                  });
+                                }
+                              },
+                            ),
+                            Text('$orderCount'),
+                            IconButton(
+                              icon: Icon(Icons.add),
+                              onPressed: () {
                                 setState(() {
-                                  if (orderCount - 1 == 0) {
-                                    orderItems.remove(
-                                        menuItem['name']); // 如果数量为0，移除这个菜品
-                                  } else {
-                                    orderItems[menuItem['name']] =
-                                        orderCount - 1;
-                                  }
+                                  orderItems[menuItem['name']] = orderCount + 1;
                                 });
-                              }
-                            },
-                          ),
-                          Text('$orderCount'),
-                          IconButton(
-                            icon: Icon(Icons.add),
-                            onPressed: () {
-                              setState(() {
-                                orderItems[menuItem['name']] = orderCount + 1;
-                              });
-                            },
-                          ),
-                        ],
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   }).toList(),
@@ -154,19 +170,12 @@ class _WaiterOrderPageState extends State<WaiterOrderPage> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          double total = orderItems.entries.fold(0, (sum, entry) {
-            String name = entry.key;
-            int count = entry.value;
-            double price =
-                menuItems.firstWhere((item) => item['name'] == name)['price'];
-            return sum + price * count;
-          });
           submitOrder(nameController.text, total);
         },
-        child: Icon(Icons.check),
-        tooltip: '提交订单',
+        icon: Icon(Icons.check),
+        label: Text('提交订单: $total 元'),
       ),
     );
   }

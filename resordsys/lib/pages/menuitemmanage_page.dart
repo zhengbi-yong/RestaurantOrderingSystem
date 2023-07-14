@@ -93,20 +93,25 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
       String price, String category) {
     _nameController.text = name;
     _priceController.text = price;
-    _categoryController.text = category; // 添加类别
+    _categoryController.text = category;
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('修改菜品'),
+          title: Text('修改菜品',
+              style: TextStyle(fontSize: 24, color: Colors.orange)), // 添加标题样式
           content: Form(
             key: _formKey,
             child: Column(
+              mainAxisSize: MainAxisSize.min, // 设置弹窗内容最小化
               children: <Widget>[
                 TextFormField(
                   controller: _nameController,
-                  decoration: InputDecoration(hintText: '菜名'),
+                  decoration: InputDecoration(
+                    labelText: '菜名', // 使用label代替hint
+                    labelStyle: TextStyle(fontSize: 18), // 添加标签样式
+                  ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return '请输入菜名';
@@ -116,7 +121,10 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
                 ),
                 TextFormField(
                   controller: _priceController,
-                  decoration: InputDecoration(hintText: '价格'),
+                  decoration: InputDecoration(
+                    labelText: '价格',
+                    labelStyle: TextStyle(fontSize: 18),
+                  ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return '请输入价格';
@@ -125,9 +133,11 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
                   },
                 ),
                 TextFormField(
-                  controller:
-                      _categoryController, // 需要创建一个新的 TextEditingController
-                  decoration: InputDecoration(hintText: '类别'),
+                  controller: _categoryController,
+                  decoration: InputDecoration(
+                    labelText: '类别',
+                    labelStyle: TextStyle(fontSize: 18),
+                  ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return '请输入类别';
@@ -140,13 +150,15 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('取消'),
+              child: Text('取消',
+                  style: TextStyle(color: Colors.grey[700])), // 修改按钮颜色
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text('提交'),
+              child:
+                  Text('提交', style: TextStyle(color: Colors.orange)), // 修改按钮颜色
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
                   updateMenuItem(itemId, _nameController.text,
@@ -166,14 +178,19 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('添加菜品'),
+          title: Text('添加菜品',
+              style: TextStyle(fontSize: 24, color: Colors.orange)), // 添加标题样式
           content: Form(
             key: _formKey,
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 TextFormField(
                   controller: _nameController,
-                  decoration: InputDecoration(hintText: '菜名'),
+                  decoration: InputDecoration(
+                    labelText: '菜名',
+                    labelStyle: TextStyle(fontSize: 18),
+                  ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return '请输入菜名';
@@ -183,7 +200,10 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
                 ),
                 TextFormField(
                   controller: _priceController,
-                  decoration: InputDecoration(hintText: '价格'),
+                  decoration: InputDecoration(
+                    labelText: '价格',
+                    labelStyle: TextStyle(fontSize: 18),
+                  ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return '请输入价格';
@@ -192,9 +212,11 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
                   },
                 ),
                 TextFormField(
-                  controller:
-                      _categoryController, // 需要创建一个新的 TextEditingController
-                  decoration: InputDecoration(hintText: '类别'),
+                  controller: _categoryController,
+                  decoration: InputDecoration(
+                    labelText: '类别',
+                    labelStyle: TextStyle(fontSize: 18),
+                  ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return '请输入类别';
@@ -207,13 +229,15 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('取消'),
+              child: Text('取消',
+                  style: TextStyle(color: Colors.grey[700])), // 修改按钮颜色
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text('添加'),
+              child:
+                  Text('添加', style: TextStyle(color: Colors.orange)), // 修改按钮颜色
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
                   addMenuItem(_nameController.text, _priceController.text,
@@ -232,7 +256,9 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('菜品管理'),
+        title: Text('菜品管理',
+            style: TextStyle(color: Colors.white, fontSize: 20)), // 添加文本样式
+        backgroundColor: Colors.orange, // 修改 AppBar 的背景色
       ),
       body: FutureBuilder<List>(
         future: futureMenuItems,
@@ -243,14 +269,26 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
               itemBuilder: (context, index) {
                 var menuItem = snapshot.data![index];
                 return Card(
+                  margin: EdgeInsets.all(8.0), // 添加卡片边距
+                  elevation: 4.0, // 添加卡片阴影
                   child: ListTile(
-                    title: Text(menuItem['name']),
-                    subtitle:
-                        Text('\$${menuItem['price'].toStringAsFixed(0)} 元'),
+                    title: Text(
+                      menuItem['name'],
+                      style: TextStyle(
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.bold), // 修改文本样式
+                    ),
+                    subtitle: Text(
+                      '\$${menuItem['price'].toStringAsFixed(0)} 元',
+                      style: TextStyle(color: Colors.red), // 修改文本样式
+                    ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
                         ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            primary: Colors.red, // 修改按钮颜色
+                          ),
                           onPressed: () async {
                             await deleteMenuItem(menuItem['id']);
                             setState(() {
@@ -259,9 +297,11 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
                           },
                           child: Text('删除'),
                         ),
-                        SizedBox(
-                            width: 10), // Add some space between the buttons
+                        SizedBox(width: 10),
                         ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            primary: Colors.blue, // 修改按钮颜色
+                          ),
                           onPressed: () {
                             showUpdateMenuItemDialog(
                                 context,
@@ -285,6 +325,7 @@ class _MenuItemManagePageState extends State<MenuItemManagePage> {
         },
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.orange, // 修改 FloatingActionButton 的背景色
         onPressed: () {
           showAddMenuItemDialog(context);
         },

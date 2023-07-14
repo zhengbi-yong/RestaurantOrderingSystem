@@ -107,50 +107,77 @@ class _OrderManagePageState extends State<OrderManagePage> {
               itemBuilder: (context, yearIndex) {
                 var year = snapshot.data!.keys.elementAt(yearIndex);
                 return ExpansionTile(
-                  title: Text('$year 年'),
+                  title: Text('$year 年',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   children: snapshot.data![year]!.keys.map((month) {
                     return ExpansionTile(
-                      title: Text('$month 月'),
+                      title: Text('$month 月',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
                       children: snapshot.data![year]![month]!.keys.map((day) {
                         return ExpansionTile(
-                          title: Text('$day 日'),
+                          title: Text('$day 日',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold)),
                           children:
                               snapshot.data![year]![month]![day]!.map((order) {
-                            return ListTile(
-                              title: Text('${order['user']} 的订单'),
-                              trailing: Row(
-                                // 使得尾部有两个按钮
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      showDialog(
-                                        context: context,
-                                        builder: (BuildContext context) {
-                                          return _OrderDetailsDialog(
-                                              order: order);
-                                        },
-                                      );
-                                    },
-                                    child: Text('详情'),
-                                  ),
-                                  SizedBox(width: 8), // 添加两个按钮之间的空间
-                                  ElevatedButton(
-                                    onPressed: () => printOrder(order['id']),
-                                    child: Text('打印'),
-                                  ),
-                                  SizedBox(width: 8), // 添加两个按钮之间的空间
-                                  ElevatedButton(
-                                    onPressed: () async {
-                                      await deleteOrder(order['id']);
-                                      setState(() {
-                                        snapshot.data![year]![month]![day]!
-                                            .remove(order);
-                                      });
-                                    },
-                                    child: Text('删除'),
-                                  ),
-                                ],
+                            return Card(
+                              child: ListTile(
+                                title: Text('${order['user']} 的订单',
+                                    style: TextStyle(color: Colors.blue)),
+                                trailing: Row(
+                                  // 使得尾部有两个按钮
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return _OrderDetailsDialog(
+                                                order: order);
+                                          },
+                                        );
+                                      },
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.view_list,
+                                              color: Colors.white),
+                                          Text('详情'),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(width: 8), // 添加两个按钮之间的空间
+                                    ElevatedButton(
+                                      onPressed: () => printOrder(order['id']),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.print,
+                                              color: Colors.white),
+                                          Text('打印'),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(width: 8), // 添加两个按钮之间的空间
+                                    ElevatedButton(
+                                      onPressed: () async {
+                                        await deleteOrder(order['id']);
+                                        setState(() {
+                                          snapshot.data![year]![month]![day]!
+                                              .remove(order);
+                                        });
+                                      },
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.delete,
+                                              color: Colors.white),
+                                          Text('删除'),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             );
                           }).toList(),
@@ -171,57 +198,6 @@ class _OrderManagePageState extends State<OrderManagePage> {
   }
 }
 
-class _ModifyOrderDialog extends StatefulWidget {
-  @override
-  __ModifyOrderDialogState createState() => __ModifyOrderDialogState();
-}
-
-class __ModifyOrderDialogState extends State<_ModifyOrderDialog> {
-  final _formKey = GlobalKey<FormState>();
-  late double _total;
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('修改订单'),
-      content: Form(
-        key: _formKey,
-        child: TextFormField(
-          keyboardType: TextInputType.number,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return '请输入一个数字';
-            }
-            try {
-              _total = double.parse(value);
-            } catch (e) {
-              return '请输入一个有效的数字';
-            }
-            return null;
-          },
-          autofocus: true,
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: Text('取消'),
-        ),
-        TextButton(
-          onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              Navigator.of(context).pop(_total);
-            }
-          },
-          child: Text('确认'),
-        ),
-      ],
-    );
-  }
-}
-
 class _OrderDetailsDialog extends StatelessWidget {
   final Map<String, dynamic> order;
 
@@ -233,32 +209,37 @@ class _OrderDetailsDialog extends StatelessWidget {
         (order['items'] as Map<String, dynamic>).entries.map((item) {
       var itemName = item.key;
       var itemDetails = item.value;
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            '$itemName, 数量: ${itemDetails['count']}, 价格: ${itemDetails['price']} 元',
-            style: TextStyle(color: Colors.blue), // Change color to blue
+      return Card(
+        child: ListTile(
+          leading: Icon(Icons.fastfood),
+          title: Text(
+            '$itemName',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
-          Text(
-              '是否准备: ${itemDetails['isPrepared'] ? '已准备' : '未准备'}, 是否上桌: ${itemDetails['isServed'] ? '已上桌' : '未上桌'}'),
-        ],
+          subtitle: Text(
+              '数量: ${itemDetails['count']}, 价格: ${itemDetails['price']} 元, 是否准备: ${itemDetails['isPrepared'] ? '已准备' : '未准备'}, 是否上桌: ${itemDetails['isServed'] ? '已上桌' : '未上桌'}'),
+        ),
       );
     }).toList();
 
     return AlertDialog(
-      title: Text('订单详情'),
+      title: Text('订单详情', style: TextStyle(color: Colors.blue, fontSize: 20)),
       content: SingleChildScrollView(
         child: ListBody(
           children: <Widget>[
-            Text('订单编号: ${order['id']}'),
-            Text('用户名: ${order['user']}'),
-            Text('提交时间: ${order['timestamp']}'),
-            Text('总价: ${order['total']} 元'),
-            Text('订单提交: ${order['isSubmitted'] ? '已提交' : '未提交'}'),
-            Text('订单确认: ${order['isConfirmed'] ? '已确认' : '未确认'}'),
-            Text('订单完成: ${order['isCompleted'] ? '已完成' : '未完成'}'),
-            Text('订单支付: ${order['isPaid'] ? '已支付' : '未支付'}'),
+            Text('订单编号: ${order['id']}', style: TextStyle(fontSize: 16)),
+            Text('用户名: ${order['user']}', style: TextStyle(fontSize: 16)),
+            Text('提交时间: ${order['timestamp']}', style: TextStyle(fontSize: 16)),
+            Text('总价: ${order['total']} 元',
+                style: TextStyle(fontSize: 16, color: Colors.red)),
+            Text('订单提交: ${order['isSubmitted'] ? '已提交' : '未提交'}',
+                style: TextStyle(fontSize: 16)),
+            Text('订单确认: ${order['isConfirmed'] ? '已确认' : '未确认'}',
+                style: TextStyle(fontSize: 16)),
+            Text('订单完成: ${order['isCompleted'] ? '已完成' : '未完成'}',
+                style: TextStyle(fontSize: 16)),
+            Text('订单支付: ${order['isPaid'] ? '已支付' : '未支付'}',
+                style: TextStyle(fontSize: 16)),
             ...orderItems,
           ],
         ),

@@ -101,20 +101,40 @@ class _RegisterPageState extends State<RegisterPage> {
                 );
               }).toList(),
             ),
-            TextField(
-              controller: _usernameController,
-              decoration: InputDecoration(hintText: '用户名'),
+            SizedBox(height: 10), // Add space
+            Card(
+              child: ListTile(
+                leading: Icon(Icons.person),
+                title: TextField(
+                  controller: _usernameController,
+                  decoration: InputDecoration(hintText: '用户名'),
+                ),
+              ),
             ),
-            TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(hintText: '密码'),
-              obscureText: true,
+            SizedBox(height: 10), // Add space
+            Card(
+              child: ListTile(
+                leading: Icon(Icons.lock),
+                title: TextField(
+                  controller: _passwordController,
+                  decoration: InputDecoration(hintText: '密码'),
+                  obscureText: true,
+                ),
+              ),
             ),
+            SizedBox(height: 10), // Add space
             ElevatedButton(
               onPressed: () {
                 register(_usernameController.text, _passwordController.text);
               },
               child: Text('注册'),
+              style: ElevatedButton.styleFrom(
+                primary: Colors.blue, // Change the color of the button
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                      12), // Change the shape of the button
+                ),
+              ),
             ),
           ],
         ),

@@ -67,7 +67,9 @@ class _CustomerPageState extends State<CustomerPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('海底世界海景餐厅'),
+        title: Text('海底世界海景餐厅',
+            style: TextStyle(color: Colors.white, fontSize: 20)), // 修改标题颜色和字体大小
+        backgroundColor: Colors.blue, // 修改App Bar背景颜色
       ),
       body: ListView.builder(
         itemCount: groupedMenuItems.keys.length,
@@ -81,19 +83,21 @@ class _CustomerPageState extends State<CustomerPage> {
               style: TextStyle(
                 fontSize: 18.0,
                 fontWeight: FontWeight.bold,
-                color: Colors.blue, // 类别名颜色修改为蓝色
+                color: Colors.deepPurple, // 类别名颜色修改为深紫色
               ),
             ),
             children: categoryMenuItems.map((menuItem) {
               final orderCount = orderItems[menuItem['name']] ?? 0;
               return ListTile(
-                title: Text(menuItem['name']),
-                subtitle: Text('${menuItem['price']} 元'),
+                title: Text(menuItem['name'],
+                    style: TextStyle(fontSize: 16)), // 修改菜名字体大小
+                subtitle: Text('${menuItem['price']} 元',
+                    style: TextStyle(fontSize: 14)), // 修改价格字体大小
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: Icon(Icons.remove),
+                      icon: Icon(Icons.remove, color: Colors.red), // 修改减号颜色为红色
                       onPressed: () {
                         if (orderCount > 0) {
                           setState(() {
@@ -106,9 +110,10 @@ class _CustomerPageState extends State<CustomerPage> {
                         }
                       },
                     ),
-                    Text('$orderCount'),
+                    Text('$orderCount',
+                        style: TextStyle(fontSize: 16)), // 修改数量字体大小
                     IconButton(
-                      icon: Icon(Icons.add),
+                      icon: Icon(Icons.add, color: Colors.green), // 修改加号颜色为绿色
                       onPressed: () {
                         setState(() {
                           orderItems[menuItem['name']] = orderCount + 1;
@@ -124,6 +129,7 @@ class _CustomerPageState extends State<CustomerPage> {
       ),
       bottomNavigationBar: BottomAppBar(
         shape: CircularNotchedRectangle(),
+        color: Colors.blue, // 修改BottomAppBar颜色为蓝色
         child: Container(height: 60.0),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -136,6 +142,7 @@ class _CustomerPageState extends State<CustomerPage> {
           );
         },
         child: Icon(Icons.shopping_cart),
+        backgroundColor: Colors.orange, // 修改浮动操作按钮的背景颜色
       ),
     );
   }
