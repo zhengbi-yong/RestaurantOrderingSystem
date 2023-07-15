@@ -25,6 +25,15 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from email.mime.base import MIMEBase
 from email import encoders
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import inch
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
+from reportlab.platypus import TableStyle
 
 # 创建日志记录器
 logger = logging.getLogger(__name__)
@@ -426,30 +435,110 @@ def pay_order():
 #             return jsonify({'message': 'Order not found'}), 404
 
 
+# @app.route("/orders/print", methods=["POST"])
+# def print_order():
+#     data = request.get_json()
+#     order_id = data["id"]
+#     with app.app_context():
+#         order = Order.query.get(order_id)
+#         if order:
+#             # Create a new PDF with Reportlab
+#             c = canvas.Canvas("order.pdf", pagesize=letter)
+#             width, height = letter
+
+#             # Add order information to the PDF
+#             c.drawString(30, height - 30, f"Order ID: {order.id}")
+#             c.drawString(30, height - 60, f"User: {order.user}")
+#             c.drawString(30, height - 90, f"Total: {order.total}")
+
+#             order_info = json.loads(order.items)
+#             for i, (item_name, item_info) in enumerate(order_info.items()):
+#                 # Use dict.get() to provide a default value for 'quantity'
+#                 quantity = item_info.get("quantity", "N/A")
+#                 c.drawString(30, height - 120 - i * 30, f"{item_name} x {quantity}")
+
+#             # Save the PDF
+#             c.save()
+
+#             # Prepare the email
+#             msg = MIMEMultipart()
+#             msg["From"] = "haidishijierestaurant@outlook.com"
+#             msg["To"] = "jcc8792vm3h5e8@print.rpt.epson.com.cn"
+#             msg["Subject"] = "Print order"
+
+#             # Attach the PDF to the email
+#             with open("order.pdf", "rb") as f:
+#                 attach = MIMEBase("application", "octet-stream")
+#                 attach.set_payload(f.read())
+#             encoders.encode_base64(attach)
+#             attach.add_header(
+#                 "Content-Disposition",
+#                 "attachment",
+#                 filename=str(order.id) + "_order.pdf",
+#             )
+#             msg.attach(attach)
+
+#             # Send the email
+#             server = smtplib.SMTP("smtp.office365.com", 587)
+#             server.starttls()
+#             server.login("haidishijierestaurant@outlook.com", "Haidishijie")
+#             server.sendmail(
+#                 "haidishijierestaurant@outlook.com",
+#                 "jcc8792vm3h5e8@print.rpt.epson.com.cn",
+#                 msg.as_string(),
+#             )
+#             server.quit()
+
+#             return jsonify({"message": "Print request sent"}), 200
+#         else:
+#             return jsonify({"message": "Order not found"}), 404
+
 @app.route("/orders/print", methods=["POST"])
 def print_order():
+
     data = request.get_json()
     order_id = data["id"]
     with app.app_context():
         order = Order.query.get(order_id)
         if order:
+            # Register a Chinese font
+            # pdfmetrics.registerFont(TTFont('DejaVuSans', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'))
+            pdfmetrics.registerFont(TTFont('AR PL UMing CN', '/usr/share/fonts/truetype/arphic/uming.ttc'))
+
             # Create a new PDF with Reportlab
-            c = canvas.Canvas("order.pdf", pagesize=letter)
-            width, height = letter
+            doc = SimpleDocTemplate("order.pdf", pagesize=letter)
+            story = []
 
             # Add order information to the PDF
-            c.drawString(30, height - 30, f"Order ID: {order.id}")
-            c.drawString(30, height - 60, f"User: {order.user}")
-            c.drawString(30, height - 90, f"Total: {order.total}")
+            styles = getSampleStyleSheet()
+          # Then use the font in your styles
+            styles["BodyText"].fontName = 'AR PL UMing CN'
+            styles["Title"].fontName = 'AR PL UMing CN'
+            story.append(Paragraph(f"Order ID: {order.id}", styles["Title"]))
+            story.append(Paragraph(f"User: {order.user}", styles["BodyText"]))
+            story.append(Paragraph(f"Total: {order.total}", styles["BodyText"]))
 
             order_info = json.loads(order.items)
-            for i, (item_name, item_info) in enumerate(order_info.items()):
-                # Use dict.get() to provide a default value for 'quantity'
-                quantity = item_info.get("quantity", "N/A")
-                c.drawString(30, height - 120 - i * 30, f"{item_name} x {quantity}")
+            data = []
+            for item_name, item_info in order_info.items():
+        # Use dict.get() to provide a default value for 'quantity' and 'price'
+                quantity = item_info.get("count", "N/A")
+                price = item_info.get("price", "N/A")  # 获取价格
+                data.append([item_name, quantity, price])  # 添加价格到表格数据中
+            table = Table(data)
+            # 创建一个新的TableStyle
+            table_style = TableStyle([
+                ('FONTNAME', (0,0), (-1,-1), 'AR PL UMing CN'),  # 设置字体
+                ('FONTSIZE', (0,0), (-1,-1), 12),  # 设置字体大小
+                ('GRID', (0,0), (-1,-1), 1, colors.black),  # 设置表格线
+            ])
+            # 将样式应用到表格上
+            table.setStyle(table_style)
+            
+            story.append(table)
 
             # Save the PDF
-            c.save()
+            doc.build(story)
 
             # Prepare the email
             msg = MIMEMultipart()
