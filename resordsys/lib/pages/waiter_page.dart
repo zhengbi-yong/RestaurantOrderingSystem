@@ -26,28 +26,38 @@ class _WaiterPageState extends State<WaiterPage> {
     super.initState();
     fetchOrders();
 
-    // 初始化socket连接
     socket = IO.io('${Config.API_URL}', <String, dynamic>{
       'transports': ['websocket'],
       'autoConnect': false,
     });
 
-    // 连接到服务器
     socket?.connect();
 
-    // 当服务器发送 'new order' 事件时触发
     socket?.on('new order', (_) {
       fetchOrders();
     });
-    // 当服务器发送 'dish prepared' 事件时触发
     socket?.on('dish prepared', (_) {
+      fetchOrders();
+    });
+    socket?.on('order confirmed', (_) {
+      fetchOrders();
+    });
+    socket?.on('dish served', (_) {
+      fetchOrders();
+    });
+    socket?.on('delete order', (_) {
+      fetchOrders();
+    });
+    socket?.on('order modified', (_) {
+      fetchOrders();
+    });
+    socket?.on('order paid', (_) {
       fetchOrders();
     });
   }
 
   @override
   void dispose() {
-    // 断开连接，清理资源
     socket?.disconnect();
     super.dispose();
   }
@@ -114,11 +124,16 @@ class _WaiterPageState extends State<WaiterPage> {
         itemBuilder: (ctx, index) {
           final order = orders[index];
 
-          bool allItemsServed = (order['items'] as Map<String, dynamic>)
-              .values
-              .every((item) => item['isServed']);
+          bool allItemsPreparedAndServed =
+              (order['items'] as Map<String, dynamic>)
+                  .values
+                  .every((item) => item['isPrepared'] && item['isServed']);
 
-          if (order['isPaid']) {
+          if (order['isSubmitted'] &&
+              order['isConfirmed'] &&
+              order['isCompleted'] &&
+              order['isPaid'] &&
+              allItemsPreparedAndServed) {
             return SizedBox.shrink();
           }
 
@@ -152,30 +167,54 @@ class _WaiterPageState extends State<WaiterPage> {
                   );
                 }).toList(),
                 ElevatedButton(
-                  onPressed: order['isPaid']
-                      ? null
-                      : () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    EditOrderPage(order)), // 这里跳转到新的页面
-                          ).then((_) {
-                            // 当从修改订单页面返回时，重新获取订单数据
-                            fetchOrders();
-                          });
-                        },
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => EditOrderPage(order)),
+                    ).then((_) {
+                      fetchOrders();
+                    });
+                  },
                   child: Text('修改订单'),
                 ),
                 ElevatedButton(
                   onPressed: () => confirmOrder(order['id']),
                   child: Text('确认订单'),
                 ),
-                if (allItemsServed && !order['isPaid'])
-                  ElevatedButton(
-                    onPressed: () => payOrder(order['id']),
-                    child: Text('确认付款'),
+                ElevatedButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: new Text("确认付款"),
+                          content: new Text("你确定要确认付款吗？"),
+                          actions: <Widget>[
+                            new TextButton(
+                              child: new Text("取消"),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            new TextButton(
+                              child: new Text("确认"),
+                              onPressed: () {
+                                payOrder(order['id']);
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                  child: Text('确认付款'),
+                  style: ButtonStyle(
+                    backgroundColor:
+                        MaterialStateProperty.all<Color>(Colors.red),
                   ),
+                ),
                 Text(
                     '订单状态:${order['isSubmitted'] ? '已提交' : '未提交'} / ${order['isConfirmed'] ? '已确认' : '未确认'} / ${order['isCompleted'] ? '已完成' : '未完成'} / ${order['isPaid'] ? '已付款' : '未付款'}'),
                 Text('订单总额: ${order['total']} 元'),
@@ -188,8 +227,7 @@ class _WaiterPageState extends State<WaiterPage> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-                builder: (context) => WaiterOrderPage()), // 这里跳转到新的页面
+            MaterialPageRoute(builder: (context) => WaiterOrderPage()),
           );
         },
         child: Icon(Icons.add),

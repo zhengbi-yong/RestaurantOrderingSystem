@@ -40,6 +40,15 @@ class _ChefPageState extends State<ChefPage> {
     socket?.on('order modified', (_) {
       fetchOrders();
     });
+    socket?.on('new order', (_) {
+      fetchOrders();
+    });
+    socket?.on('delete order', (_) {
+      fetchOrders();
+    });
+    socket?.on('order paid', (_) {
+      fetchOrders();
+    });
   }
 
   Future<void> fetchOrders() async {

@@ -15,13 +15,13 @@ class EditOrderPage extends StatefulWidget {
 class _EditOrderPageState extends State<EditOrderPage> {
   late Map<String, dynamic> order;
   List<dynamic> menuItems = [];
-  TextEditingController userController = TextEditingController(); // 创建一个文本输入控制器
+  TextEditingController userController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     order = Map<String, dynamic>.from(widget.initialOrder);
-    userController.text = order['user']; // 设置文本输入框的初始值为订单的当前用户
+    userController.text = order['user'];
     fetchMenu();
   }
 
@@ -30,7 +30,6 @@ class _EditOrderPageState extends State<EditOrderPage> {
     if (response.statusCode == 200) {
       setState(() {
         menuItems = jsonDecode(response.body);
-        // 对菜品列表按照 'category' 字段进行排序
         menuItems.sort(
             (a, b) => (a['category'] ?? '其他').compareTo(b['category'] ?? '其他'));
       });
@@ -40,18 +39,16 @@ class _EditOrderPageState extends State<EditOrderPage> {
   }
 
   Future<void> modifyOrder() async {
-    // 过滤掉数量为0的菜品
     order['items'].removeWhere((key, value) => value['count'] == 0);
     order['user'] = userController.text;
 
-    // 从菜单数据中获取正确的价格，并计算总价
     order['total'] = 0;
     order['items'].forEach((key, value) {
       var menuItem = menuItems.firstWhere((item) => item['name'] == key,
           orElse: () => null);
       if (menuItem != null) {
-        value['price'] = menuItem['price']; // 更新价格
-        order['total'] += value['count'] * value['price']; // 计算总价
+        value['price'] = menuItem['price'];
+        order['total'] += value['count'] * value['price'];
       }
     });
 
@@ -61,7 +58,7 @@ class _EditOrderPageState extends State<EditOrderPage> {
       body: jsonEncode(order),
     );
     if (response.statusCode == 200) {
-      Navigator.pop(context, true); // 返回上一个页面
+      Navigator.pop(context, true);
     } else {
       print('修改订单失败');
       print('Status code: ${response.statusCode}');
@@ -71,7 +68,6 @@ class _EditOrderPageState extends State<EditOrderPage> {
 
   @override
   Widget build(BuildContext context) {
-    // 对menuItems进行分组，以类别作为key，对应类别的菜品作为value
     Map<String, List<dynamic>> groupedMenuItems = {};
 
     for (var menuItem in menuItems) {
@@ -83,9 +79,9 @@ class _EditOrderPageState extends State<EditOrderPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('修改订单',
-            style: TextStyle(color: Colors.white, fontSize: 20)), // 修改标题颜色和字体大小
-        backgroundColor: Colors.orange, // 修改App Bar背景颜色
+        title:
+            Text('修改订单', style: TextStyle(color: Colors.white, fontSize: 20)),
+        backgroundColor: Colors.orange,
       ),
       body: ListView(
         children: <Widget>[
@@ -96,17 +92,19 @@ class _EditOrderPageState extends State<EditOrderPage> {
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: '用户',
-                labelStyle: TextStyle(fontSize: 18), // 修改标签字体大小
+                labelStyle: TextStyle(fontSize: 18),
               ),
             ),
           ),
           ListView.builder(
-            shrinkWrap:
-                true, // This is important as there are multiple widgets in ListView
-            physics:
-                NeverScrollableScrollPhysics(), // This is important as there are multiple widgets in ListView
-            itemCount: groupedMenuItems.keys.length,
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            itemCount: groupedMenuItems.keys.length + 1, // 添加额外的一个项目作为空白距离
             itemBuilder: (ctx, index) {
+              if (index == groupedMenuItems.keys.length) {
+                // 如果是最后一个项目，添加一个高度为 80 的 SizedBox
+                return SizedBox(height: 80);
+              }
               String category = groupedMenuItems.keys.elementAt(index);
               List<dynamic> categoryMenuItems =
                   groupedMenuItems[category] ?? [];
@@ -117,7 +115,7 @@ class _EditOrderPageState extends State<EditOrderPage> {
                   style: TextStyle(
                     fontSize: 18.0,
                     fontWeight: FontWeight.bold,
-                    color: Colors.deepPurple, // 类别名颜色修改为深紫色
+                    color: Colors.deepPurple,
                   ),
                 ),
                 children: categoryMenuItems.map((menuItem) {
@@ -131,16 +129,15 @@ class _EditOrderPageState extends State<EditOrderPage> {
                     order['items'][menuItem['name']] = orderItem;
                   }
                   return ListTile(
-                    title: Text(menuItem['name'],
-                        style: TextStyle(fontSize: 16)), // 修改菜名字体大小
+                    title:
+                        Text(menuItem['name'], style: TextStyle(fontSize: 16)),
                     subtitle: Text('${menuItem['price']} 元',
-                        style: TextStyle(fontSize: 14)), // 修改价格字体大小
+                        style: TextStyle(fontSize: 14)),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.remove,
-                              color: Colors.red), // 修改减号颜色为红色
+                          icon: Icon(Icons.remove, color: Colors.red),
                           onPressed: () {
                             if (orderItem['count'] > 0) {
                               setState(() {
@@ -150,10 +147,9 @@ class _EditOrderPageState extends State<EditOrderPage> {
                           },
                         ),
                         Text('${orderItem['count']}',
-                            style: TextStyle(fontSize: 16)), // 修改数量字体大小
+                            style: TextStyle(fontSize: 16)),
                         IconButton(
-                          icon:
-                              Icon(Icons.add, color: Colors.green), // 修改加号颜色为绿色
+                          icon: Icon(Icons.add, color: Colors.green),
                           onPressed: () {
                             setState(() {
                               orderItem['count']++;
@@ -169,11 +165,16 @@ class _EditOrderPageState extends State<EditOrderPage> {
           ),
         ],
       ),
+      bottomNavigationBar: BottomAppBar(
+        shape: CircularNotchedRectangle(),
+        child: Container(height: 60.0),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(
         onPressed: modifyOrder,
         child: Icon(Icons.check),
         tooltip: '确认修改',
-        backgroundColor: Colors.orange, // 修改浮动操作按钮的背景颜色
+        backgroundColor: Colors.orange,
       ),
     );
   }

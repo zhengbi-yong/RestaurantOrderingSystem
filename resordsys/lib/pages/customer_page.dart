@@ -4,7 +4,9 @@ import 'dart:convert';
 import 'shoppingcart_page.dart';
 import 'dart:developer' as developer;
 import '../config.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
+IO.Socket? socket;
 void log(String message) {
   developer.log(message, name: 'CustomerPage');
 }
@@ -24,6 +26,24 @@ class _CustomerPageState extends State<CustomerPage> {
   void initState() {
     super.initState();
     fetchMenu();
+    // 初始化socket连接
+    socket = IO.io('${Config.API_URL}', <String, dynamic>{
+      'transports': ['websocket'],
+      'autoConnect': false,
+    });
+
+    // 连接到服务器
+    socket?.connect();
+
+    socket?.on('new menuitem', (_) {
+      fetchMenu();
+    });
+    socket?.on('modify menuitem', (_) {
+      fetchMenu();
+    });
+    socket?.on('delete menuitem', (_) {
+      fetchMenu();
+    });
   }
 
   Future<void> fetchMenu() async {

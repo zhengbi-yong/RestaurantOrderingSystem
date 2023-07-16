@@ -34,7 +34,15 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from reportlab.platypus import TableStyle
-
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Frame, PageTemplate
+from reportlab.lib import colors
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import PageBreak
+from reportlab.platypus import NextPageTemplate
+from reportlab.platypus import FrameBreak
 # 创建日志记录器
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -186,6 +194,7 @@ def add_menu_item():
     with app.app_context():
         db.session.add(new_item)
         db.session.commit()
+        socketio.emit("new menuitem", "new menuitem")
     return jsonify({"message": "Menu item added successfully"})
 
 
@@ -206,6 +215,7 @@ def update_menu_item(item_id):
             if category is not None:
                 item.category = category
             db.session.commit()
+            socketio.emit("modify menuitem", "modify menuitem")
             return jsonify({"message": "Menu item updated successfully"})
         else:
             return jsonify({"message": "Menu item not found"}), 404
@@ -219,6 +229,7 @@ def delete_menu_item(item_id):
         if item:
             db.session.delete(item)
             db.session.commit()
+            socketio.emit("delete menuitem", "delete menuitem")
             return jsonify({"message": "Menu item deleted successfully"})
         else:
             return jsonify({"message": "Menu item not found"}), 404
@@ -325,6 +336,7 @@ def serve_order_item():
                 if all(item["isServed"] for item in items.values()):
                     order.isCompleted = True
                 db.session.commit()
+                socketio.emit("dish served", {"order_id": order_id})
                 return jsonify({"message": "Order item served successfully"})
             else:
                 return jsonify({"message": "Order item not prepared or not found"})
@@ -347,6 +359,7 @@ def delete_user(user_id):
         if user:
             db.session.delete(user)
             db.session.commit()
+            socketio.emit("delete user", "delete user")
             return jsonify({"message": "User deleted successfully"})
         else:
             return jsonify({"message": "User not found"}), 404
@@ -360,7 +373,7 @@ def delete_order(order_id):
 
     db.session.delete(order)
     db.session.commit()
-
+    socketio.emit("delete order", "delete order")
     return jsonify({"message": "Order deleted successfully"}), 200
 
 
@@ -376,10 +389,14 @@ def modify_order(order_id):
         updated_order["timestamp"], "%Y-%m-%dT%H:%M:%S"
     )  # 修改格式字符串
     order.total = updated_order["total"]
-    order.isSubmitted = updated_order["isSubmitted"]
-    order.isConfirmed = updated_order["isConfirmed"]
-    order.isCompleted = updated_order["isCompleted"]
-    order.isPaid = updated_order["isPaid"]
+    # order.isSubmitted = updated_order["isSubmitted"]
+    # order.isConfirmed = updated_order["isConfirmed"]
+    # order.isCompleted = updated_order["isCompleted"]
+    # order.isPaid = updated_order["isPaid"]
+    order.isSubmitted = True
+    order.isConfirmed = True
+    order.isCompleted = False
+    order.isPaid = False
     order.items = json.dumps(updated_order["items"])
 
     db.session.commit()
@@ -493,6 +510,92 @@ def pay_order():
 #         else:
 #             return jsonify({"message": "Order not found"}), 404
 
+# @app.route("/orders/print", methods=["POST"])
+# def print_order():
+
+#     data = request.get_json()
+#     order_id = data["id"]
+#     with app.app_context():
+#         order = Order.query.get(order_id)
+#         if order:
+#             # Register a Chinese font
+#             pdfmetrics.registerFont(TTFont('AR PL UMing CN', '/usr/share/fonts/truetype/arphic/uming.ttc'))
+
+#             # Create a new PDF with Reportlab
+#             doc = SimpleDocTemplate("order.pdf", pagesize=letter,
+#                                     rightMargin=72, leftMargin=72,
+#                                     topMargin=72, bottomMargin=18)
+
+#             story = []
+
+#             # Add order information to the PDF
+#             styles = getSampleStyleSheet()
+#             styles["BodyText"].fontName = 'AR PL UMing CN'
+#             styles["BodyText"].fontSize = 12
+#             styles["BodyText"].leading = 14
+#             styles["Title"].fontName = 'AR PL UMing CN'
+#             styles["Title"].fontSize = 20
+#             styles["Title"].leading = 30
+#             story.append(Paragraph(f"Order ID: {order.id}", styles["Title"]))
+#             story.append(Paragraph(f"User: {order.user}", styles["BodyText"]))
+#             story.append(Paragraph(f"Total: {order.total}", styles["BodyText"]))
+
+#             order_info = json.loads(order.items)
+#             data = [["Item", "Quantity", "Price"]]  # Add table header
+#             for item_name, item_info in order_info.items():
+#                 quantity = item_info.get("count", "N/A")
+#                 price = item_info.get("price", "N/A")
+#                 data.append([item_name, quantity, price])
+#             table = Table(data, hAlign='LEFT')
+
+#             table_style = TableStyle([
+#                 ('FONTNAME', (0,0), (-1,-1), 'AR PL UMing CN'),
+#                 ('FONTSIZE', (0,0), (-1,-1), 12),
+#                 ('GRID', (0,0), (-1,-1), 1, colors.black),
+#                 ('BACKGROUND', (0, 0), (-1, 0), colors.grey),  # table header color
+#                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),  # table header text color
+#                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # all text centered
+#                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')  # all text middle aligned
+#             ])
+#             table.setStyle(table_style)
+
+#             story.append(table)
+
+#             # Save the PDF
+#             doc.build(story)
+
+#             # Prepare the email
+#             msg = MIMEMultipart()
+#             msg["From"] = "haidishijierestaurant@outlook.com"
+#             msg["To"] = "jcc8792vm3h5e8@print.rpt.epson.com.cn"
+#             msg["Subject"] = "Print order"
+
+#             # Attach the PDF to the email
+#             with open("order.pdf", "rb") as f:
+#                 attach = MIMEBase("application", "octet-stream")
+#                 attach.set_payload(f.read())
+#             encoders.encode_base64(attach)
+#             attach.add_header(
+#                 "Content-Disposition",
+#                 "attachment",
+#                 filename=str(order.id) + "_order.pdf",
+#             )
+#             msg.attach(attach)
+
+#             # Send the email
+#             server = smtplib.SMTP("smtp.office365.com", 587)
+#             server.starttls()
+#             server.login("haidishijierestaurant@outlook.com", "Haidishijie")
+#             server.sendmail(
+#                 "haidishijierestaurant@outlook.com",
+#                 "jcc8792vm3h5e8@print.rpt.epson.com.cn",
+#                 msg.as_string(),
+#             )
+#             server.quit()
+
+#             return jsonify({"message": "Print request sent"}), 200
+#         else:
+#             return jsonify({"message": "Order not found"}), 404
 @app.route("/orders/print", methods=["POST"])
 def print_order():
 
@@ -502,39 +605,60 @@ def print_order():
         order = Order.query.get(order_id)
         if order:
             # Register a Chinese font
-            # pdfmetrics.registerFont(TTFont('DejaVuSans', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'))
             pdfmetrics.registerFont(TTFont('AR PL UMing CN', '/usr/share/fonts/truetype/arphic/uming.ttc'))
 
             # Create a new PDF with Reportlab
-            doc = SimpleDocTemplate("order.pdf", pagesize=letter)
+            doc = SimpleDocTemplate("order.pdf", pagesize=letter,
+                                    rightMargin=72, leftMargin=72,
+                                    topMargin=72, bottomMargin=18)
+            
+            # Define two columns with Frames
+            frame1 = Frame(doc.leftMargin, doc.bottomMargin, doc.width/2-6, doc.height, id='col1')
+            frame2 = Frame(doc.leftMargin + doc.width/2 + 6, doc.bottomMargin, doc.width/2-6, doc.height, id='col2')
+            doc.addPageTemplates([PageTemplate(id='TwoCol', frames=[frame1, frame2])])
+
+            # Create a list for all the flowables
             story = []
 
             # Add order information to the PDF
             styles = getSampleStyleSheet()
-          # Then use the font in your styles
             styles["BodyText"].fontName = 'AR PL UMing CN'
+            styles["BodyText"].fontSize = 14
+            styles["BodyText"].leading = 20
             styles["Title"].fontName = 'AR PL UMing CN'
+            styles["Title"].fontSize = 24
+            styles["Title"].leading = 30
             story.append(Paragraph(f"Order ID: {order.id}", styles["Title"]))
             story.append(Paragraph(f"User: {order.user}", styles["BodyText"]))
             story.append(Paragraph(f"Total: {order.total}", styles["BodyText"]))
 
             order_info = json.loads(order.items)
-            data = []
+            data = [["Item", "Quantity", "Price"]]  # Add table header
             for item_name, item_info in order_info.items():
-        # Use dict.get() to provide a default value for 'quantity' and 'price'
                 quantity = item_info.get("count", "N/A")
-                price = item_info.get("price", "N/A")  # 获取价格
-                data.append([item_name, quantity, price])  # 添加价格到表格数据中
-            table = Table(data)
-            # 创建一个新的TableStyle
+                price = item_info.get("price", "N/A")
+                data.append([item_name, quantity, price])
+            table = Table(data, hAlign='CENTER')
+
             table_style = TableStyle([
-                ('FONTNAME', (0,0), (-1,-1), 'AR PL UMing CN'),  # 设置字体
-                ('FONTSIZE', (0,0), (-1,-1), 12),  # 设置字体大小
-                ('GRID', (0,0), (-1,-1), 1, colors.black),  # 设置表格线
+                ('FONTNAME', (0,0), (-1,-1), 'AR PL UMing CN'),
+                ('FONTSIZE', (0,0), (-1,-1), 14),
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),  # table header color
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),  # table header text color
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # all text centered
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')  # all text middle aligned
             ])
-            # 将样式应用到表格上
             table.setStyle(table_style)
-            
+
+            story.append(table)
+
+            # Add a frame break to move to the next column
+            story.append(FrameBreak())
+
+            # Add the same content for the second column
+            story.append(Paragraph(f"Order ID: {order.id}", styles["Title"]))
+            story.append(Paragraph(f"User: {order.user}", styles["BodyText"]))
+            story.append(Paragraph(f"Total: {order.total}", styles["BodyText"]))
             story.append(table)
 
             # Save the PDF
@@ -572,6 +696,8 @@ def print_order():
             return jsonify({"message": "Print request sent"}), 200
         else:
             return jsonify({"message": "Order not found"}), 404
+
+
 
 
 @app.route("/summary", methods=["GET"])
