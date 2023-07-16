@@ -125,6 +125,10 @@ class _WaiterOrderPageState extends State<WaiterOrderPage> {
                   children: categoryMenuItems.map((menuItem) {
                     final orderCount = orderItems[menuItem['name']] ?? 0;
                     return Card(
+                      elevation: 5.0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15.0),
+                      ),
                       child: ListTile(
                         title: Text(
                           menuItem['name'],

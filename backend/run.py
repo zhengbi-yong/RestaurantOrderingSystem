@@ -419,183 +419,6 @@ def pay_order():
         else:
             return jsonify({"message": "Order not found"})
 
-
-# @app.route('/orders/print', methods=['POST'])
-# def print_order():
-#     data = request.get_json()
-#     order_id = data['id']
-#     with app.app_context():
-#         order = Order.query.get(order_id)
-#         if order:
-#             msg = MIMEMultipart()
-#             msg['From'] = 'haidishijierestaurant@outlook.com'
-#             msg['To'] = 'jcc8792vm3h5e8@print.rpt.epson.com.cn'
-#             msg['Subject'] = 'Print order'
-
-#             body = f"""
-#             Order ID: {order.id}
-#             User: {order.user}
-#             Total: {order.total}
-#             Items: {order.items}
-#             """
-#             msg.attach(MIMEText(body, 'plain'))
-
-#             server = smtplib.SMTP('smtp.office365.com', 587)
-#             server.starttls()
-#             server.login('haidishijierestaurant@outlook.com', 'Haidishijie')
-#             text = msg.as_string()
-#             server.sendmail('haidishijierestaurant@outlook.com', 'jcc8792vm3h5e8@print.rpt.epson.com.cn', text)
-#             server.quit()
-
-#             return jsonify({'message': 'Print request sent'}), 200
-#         else:
-#             return jsonify({'message': 'Order not found'}), 404
-
-
-# @app.route("/orders/print", methods=["POST"])
-# def print_order():
-#     data = request.get_json()
-#     order_id = data["id"]
-#     with app.app_context():
-#         order = Order.query.get(order_id)
-#         if order:
-#             # Create a new PDF with Reportlab
-#             c = canvas.Canvas("order.pdf", pagesize=letter)
-#             width, height = letter
-
-#             # Add order information to the PDF
-#             c.drawString(30, height - 30, f"Order ID: {order.id}")
-#             c.drawString(30, height - 60, f"User: {order.user}")
-#             c.drawString(30, height - 90, f"Total: {order.total}")
-
-#             order_info = json.loads(order.items)
-#             for i, (item_name, item_info) in enumerate(order_info.items()):
-#                 # Use dict.get() to provide a default value for 'quantity'
-#                 quantity = item_info.get("quantity", "N/A")
-#                 c.drawString(30, height - 120 - i * 30, f"{item_name} x {quantity}")
-
-#             # Save the PDF
-#             c.save()
-
-#             # Prepare the email
-#             msg = MIMEMultipart()
-#             msg["From"] = "haidishijierestaurant@outlook.com"
-#             msg["To"] = "jcc8792vm3h5e8@print.rpt.epson.com.cn"
-#             msg["Subject"] = "Print order"
-
-#             # Attach the PDF to the email
-#             with open("order.pdf", "rb") as f:
-#                 attach = MIMEBase("application", "octet-stream")
-#                 attach.set_payload(f.read())
-#             encoders.encode_base64(attach)
-#             attach.add_header(
-#                 "Content-Disposition",
-#                 "attachment",
-#                 filename=str(order.id) + "_order.pdf",
-#             )
-#             msg.attach(attach)
-
-#             # Send the email
-#             server = smtplib.SMTP("smtp.office365.com", 587)
-#             server.starttls()
-#             server.login("haidishijierestaurant@outlook.com", "Haidishijie")
-#             server.sendmail(
-#                 "haidishijierestaurant@outlook.com",
-#                 "jcc8792vm3h5e8@print.rpt.epson.com.cn",
-#                 msg.as_string(),
-#             )
-#             server.quit()
-
-#             return jsonify({"message": "Print request sent"}), 200
-#         else:
-#             return jsonify({"message": "Order not found"}), 404
-
-# @app.route("/orders/print", methods=["POST"])
-# def print_order():
-
-#     data = request.get_json()
-#     order_id = data["id"]
-#     with app.app_context():
-#         order = Order.query.get(order_id)
-#         if order:
-#             # Register a Chinese font
-#             pdfmetrics.registerFont(TTFont('AR PL UMing CN', '/usr/share/fonts/truetype/arphic/uming.ttc'))
-
-#             # Create a new PDF with Reportlab
-#             doc = SimpleDocTemplate("order.pdf", pagesize=letter,
-#                                     rightMargin=72, leftMargin=72,
-#                                     topMargin=72, bottomMargin=18)
-
-#             story = []
-
-#             # Add order information to the PDF
-#             styles = getSampleStyleSheet()
-#             styles["BodyText"].fontName = 'AR PL UMing CN'
-#             styles["BodyText"].fontSize = 12
-#             styles["BodyText"].leading = 14
-#             styles["Title"].fontName = 'AR PL UMing CN'
-#             styles["Title"].fontSize = 20
-#             styles["Title"].leading = 30
-#             story.append(Paragraph(f"Order ID: {order.id}", styles["Title"]))
-#             story.append(Paragraph(f"User: {order.user}", styles["BodyText"]))
-#             story.append(Paragraph(f"Total: {order.total}", styles["BodyText"]))
-
-#             order_info = json.loads(order.items)
-#             data = [["Item", "Quantity", "Price"]]  # Add table header
-#             for item_name, item_info in order_info.items():
-#                 quantity = item_info.get("count", "N/A")
-#                 price = item_info.get("price", "N/A")
-#                 data.append([item_name, quantity, price])
-#             table = Table(data, hAlign='LEFT')
-
-#             table_style = TableStyle([
-#                 ('FONTNAME', (0,0), (-1,-1), 'AR PL UMing CN'),
-#                 ('FONTSIZE', (0,0), (-1,-1), 12),
-#                 ('GRID', (0,0), (-1,-1), 1, colors.black),
-#                 ('BACKGROUND', (0, 0), (-1, 0), colors.grey),  # table header color
-#                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),  # table header text color
-#                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # all text centered
-#                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')  # all text middle aligned
-#             ])
-#             table.setStyle(table_style)
-
-#             story.append(table)
-
-#             # Save the PDF
-#             doc.build(story)
-
-#             # Prepare the email
-#             msg = MIMEMultipart()
-#             msg["From"] = "haidishijierestaurant@outlook.com"
-#             msg["To"] = "jcc8792vm3h5e8@print.rpt.epson.com.cn"
-#             msg["Subject"] = "Print order"
-
-#             # Attach the PDF to the email
-#             with open("order.pdf", "rb") as f:
-#                 attach = MIMEBase("application", "octet-stream")
-#                 attach.set_payload(f.read())
-#             encoders.encode_base64(attach)
-#             attach.add_header(
-#                 "Content-Disposition",
-#                 "attachment",
-#                 filename=str(order.id) + "_order.pdf",
-#             )
-#             msg.attach(attach)
-
-#             # Send the email
-#             server = smtplib.SMTP("smtp.office365.com", 587)
-#             server.starttls()
-#             server.login("haidishijierestaurant@outlook.com", "Haidishijie")
-#             server.sendmail(
-#                 "haidishijierestaurant@outlook.com",
-#                 "jcc8792vm3h5e8@print.rpt.epson.com.cn",
-#                 msg.as_string(),
-#             )
-#             server.quit()
-
-#             return jsonify({"message": "Print request sent"}), 200
-#         else:
-#             return jsonify({"message": "Order not found"}), 404
 @app.route("/orders/print", methods=["POST"])
 def print_order():
 
@@ -613,8 +436,8 @@ def print_order():
                                     topMargin=72, bottomMargin=18)
             
             # Define two columns with Frames
-            frame1 = Frame(doc.leftMargin, doc.bottomMargin, doc.width/2-6, doc.height, id='col1')
-            frame2 = Frame(doc.leftMargin + doc.width/2 + 6, doc.bottomMargin, doc.width/2-6, doc.height, id='col2')
+            frame1 = Frame(doc.leftMargin, doc.bottomMargin, doc.width/2-7, doc.height, id='col1')
+            frame2 = Frame(doc.leftMargin + doc.width/2 + 7, doc.bottomMargin, doc.width/2-6, doc.height, id='col2')
             doc.addPageTemplates([PageTemplate(id='TwoCol', frames=[frame1, frame2])])
 
             # Create a list for all the flowables
@@ -623,17 +446,17 @@ def print_order():
             # Add order information to the PDF
             styles = getSampleStyleSheet()
             styles["BodyText"].fontName = 'AR PL UMing CN'
-            styles["BodyText"].fontSize = 14
+            styles["BodyText"].fontSize = 16
             styles["BodyText"].leading = 20
             styles["Title"].fontName = 'AR PL UMing CN'
             styles["Title"].fontSize = 24
             styles["Title"].leading = 30
-            story.append(Paragraph(f"Order ID: {order.id}", styles["Title"]))
-            story.append(Paragraph(f"User: {order.user}", styles["BodyText"]))
-            story.append(Paragraph(f"Total: {order.total}", styles["BodyText"]))
+            story.append(Paragraph(f"订单编号： {order.id}", styles["Title"]))
+            story.append(Paragraph(f"顾客：    {order.user}", styles["BodyText"]))
+            story.append(Paragraph(f"总价：    {order.total}  元", styles["BodyText"]))
 
             order_info = json.loads(order.items)
-            data = [["Item", "Quantity", "Price"]]  # Add table header
+            data = [["菜品", "数量", "单价"]]  # Add table header
             for item_name, item_info in order_info.items():
                 quantity = item_info.get("count", "N/A")
                 price = item_info.get("price", "N/A")
@@ -642,7 +465,8 @@ def print_order():
 
             table_style = TableStyle([
                 ('FONTNAME', (0,0), (-1,-1), 'AR PL UMing CN'),
-                ('FONTSIZE', (0,0), (-1,-1), 14),
+                ('FONTSIZE', (0,0), (-1,-1), 20),
+                ('LEADING', (0,0), (-1,-1), 30),  # 新增行间距设置
                 ('BACKGROUND', (0, 0), (-1, 0), colors.grey),  # table header color
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),  # table header text color
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # all text centered
@@ -656,9 +480,9 @@ def print_order():
             story.append(FrameBreak())
 
             # Add the same content for the second column
-            story.append(Paragraph(f"Order ID: {order.id}", styles["Title"]))
-            story.append(Paragraph(f"User: {order.user}", styles["BodyText"]))
-            story.append(Paragraph(f"Total: {order.total}", styles["BodyText"]))
+            story.append(Paragraph(f"订单编号： {order.id}", styles["Title"]))
+            story.append(Paragraph(f"顾客：    {order.user}", styles["BodyText"]))
+            story.append(Paragraph(f"总价：    {order.total}  元", styles["BodyText"]))
             story.append(table)
 
             # Save the PDF

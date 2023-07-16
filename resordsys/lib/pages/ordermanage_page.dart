@@ -48,7 +48,7 @@ class _OrderManagePageState extends State<OrderManagePage> {
         }
         orders[year]![month]![day]!.add(order);
       }
-      setState(() {}); // 添加这行代码
+      setState(() {}); // Adding this line of code
       return orders;
     } else {
       throw Exception('Failed to load orders');
@@ -77,8 +77,8 @@ class _OrderManagePageState extends State<OrderManagePage> {
 
   Future<void> modifyOrder(int orderId, double total) async {
     var updatedOrder = {
-      'total': total, // 更新订单的数据
-      // 其他需要修改的数据
+      'total': total, // Updating the order data
+      // Other data that needs to be modified
     };
 
     final response = await http.put(
@@ -123,6 +123,10 @@ class _OrderManagePageState extends State<OrderManagePage> {
                           children:
                               snapshot.data![year]![month]![day]!.map((order) {
                             return Card(
+                              elevation: 5.0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15.0),
+                              ),
                               child: ListTile(
                                 title: Text('${order['user']} 的订单',
                                     style: TextStyle(color: Colors.blue)),
@@ -140,7 +144,7 @@ class _OrderManagePageState extends State<OrderManagePage> {
                                           },
                                         );
                                       },
-                                      child: Row(
+                                      child: const Row(
                                         children: [
                                           Icon(Icons.view_list,
                                               color: Colors.white),
@@ -148,10 +152,35 @@ class _OrderManagePageState extends State<OrderManagePage> {
                                         ],
                                       ),
                                     ),
-                                    SizedBox(width: 8), // 添加两个按钮之间的空间
+                                    const SizedBox(width: 8), // 添加两个按钮之间的空间
                                     ElevatedButton(
-                                      onPressed: () => printOrder(order['id']),
-                                      child: Row(
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              title: Text('确认'),
+                                              content: Text('您确定要打印此订单吗？'),
+                                              actions: [
+                                                TextButton(
+                                                  child: Text('取消'),
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                ),
+                                                TextButton(
+                                                  child: Text('确认'),
+                                                  onPressed: () {
+                                                    printOrder(order['id']);
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      },
+                                      child: const Row(
                                         children: [
                                           Icon(Icons.print,
                                               color: Colors.white),
@@ -159,7 +188,7 @@ class _OrderManagePageState extends State<OrderManagePage> {
                                         ],
                                       ),
                                     ),
-                                    SizedBox(width: 8), // 添加两个按钮之间的空间
+                                    const SizedBox(width: 8), // 添加两个按钮之间的空间
                                     ElevatedButton(
                                       onPressed: () async {
                                         await deleteOrder(order['id']);
@@ -168,7 +197,7 @@ class _OrderManagePageState extends State<OrderManagePage> {
                                               .remove(order);
                                         });
                                       },
-                                      child: Row(
+                                      child: const Row(
                                         children: [
                                           Icon(Icons.delete,
                                               color: Colors.white),
@@ -201,7 +230,7 @@ class _OrderManagePageState extends State<OrderManagePage> {
 class _OrderDetailsDialog extends StatelessWidget {
   final Map<String, dynamic> order;
 
-  _OrderDetailsDialog({required this.order});
+  const _OrderDetailsDialog({required this.order});
 
   @override
   Widget build(BuildContext context) {
@@ -210,6 +239,10 @@ class _OrderDetailsDialog extends StatelessWidget {
       var itemName = item.key;
       var itemDetails = item.value;
       return Card(
+        elevation: 5.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0),
+        ),
         child: ListTile(
           leading: Icon(Icons.fastfood),
           title: Text(

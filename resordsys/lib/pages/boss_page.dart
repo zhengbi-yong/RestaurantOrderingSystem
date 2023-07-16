@@ -90,51 +90,42 @@ class _BossPageState extends State<BossPage> {
         ),
       ),
       bottomNavigationBar: BottomAppBar(
+        shape: CircularNotchedRectangle(),
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround, // 设置按钮之间的间距
             children: [
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => MenuItemManagePage()),
-                  );
-                },
-                child: Text('菜品管理'),
-                style: ButtonStyle(
-                    backgroundColor:
-                        MaterialStateProperty.all(Colors.deepOrange)), // 设置按钮颜色
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => UserManagePage()),
-                  );
-                },
-                child: Text('用户管理'),
-                style: ButtonStyle(
-                    backgroundColor:
-                        MaterialStateProperty.all(Colors.deepOrange)), // 设置按钮颜色
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => OrderManagePage()),
-                  );
-                },
-                child: Text('订单管理'),
-                style: ButtonStyle(
-                    backgroundColor:
-                        MaterialStateProperty.all(Colors.deepOrange)), // 设置按钮颜色
-              ),
+              buildButton(
+                  context, '菜品管理', Colors.deepOrange, MenuItemManagePage()),
+              buildButton(context, '用户管理', Colors.deepPurple, UserManagePage()),
+              buildButton(context, '订单管理', Colors.blue, OrderManagePage()),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget buildButton(
+      BuildContext context, String title, Color color, Widget page) {
+    return ElevatedButton(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => page),
+        );
+      },
+      child: Text(title),
+      style: ButtonStyle(
+        backgroundColor: MaterialStateProperty.all(color),
+        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+            RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18.0),
+                side: BorderSide(color: color))),
+        shadowColor:
+            MaterialStateProperty.all<Color>(Colors.grey.withOpacity(0.5)),
+        elevation: MaterialStateProperty.all<double>(5),
       ),
     );
   }

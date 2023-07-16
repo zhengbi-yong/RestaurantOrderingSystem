@@ -61,7 +61,6 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> login(String username, String password) async {
     log('请求登录');
-    // await Future.delayed(Duration(seconds: 1)); // 添加延时，单位为秒
     final response = await http.post(
       Uri.parse('${Config.API_URL}/login'),
       headers: <String, String>{
@@ -77,7 +76,6 @@ class _LoginPageState extends State<LoginPage> {
     log('响应内容:${response.body}');
     log('状态码:${response.statusCode}');
     if (response.statusCode == 200) {
-      // 登录成功的操作
       log('登录成功');
       String identity = dropdownValue;
       globalUser = "$username@${DateTime.now().toIso8601String()}";
@@ -95,7 +93,6 @@ class _LoginPageState extends State<LoginPage> {
           Navigator.pushNamed(context, '/boss_page');
           break;
         default:
-          // 处理未知身份的情况，例如显示错误消息或其他操作
           log('身份未知');
           showDialog(
             context: context,
@@ -105,7 +102,6 @@ class _LoginPageState extends State<LoginPage> {
               actions: [
                 TextButton(
                   onPressed: () {
-                    // 重试登录
                     Navigator.pushNamed(context, '/login');
                   },
                   child: Text('重新登录'),
@@ -116,7 +112,6 @@ class _LoginPageState extends State<LoginPage> {
           break;
       }
     } else {
-      // 登录失败的操作
       log('登录失败');
       showDialog(
         context: context,
@@ -126,7 +121,6 @@ class _LoginPageState extends State<LoginPage> {
           actions: [
             TextButton(
               onPressed: () {
-                // 添加您想要的操作，如重试登录
                 Navigator.pushNamed(context, '/login');
               },
               child: Text('重新登录'),
@@ -137,7 +131,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  // 在 LoginPage 构建方法中更改样式：
   @override
   Widget build(BuildContext context) {
     log('登录页构建');
@@ -170,42 +163,63 @@ class _LoginPageState extends State<LoginPage> {
               controller: _usernameController,
               decoration: InputDecoration(
                 hintText: '用户名',
-                filled: true, // 添加填充
-                fillColor: Colors.grey[200], // 设置填充颜色为浅灰色
+                filled: true,
+                fillColor: Colors.grey[200],
               ),
             ),
-            SizedBox(height: 10), // 添加一些空间
+            SizedBox(height: 10),
             TextField(
               controller: _passwordController,
               decoration: InputDecoration(
                 hintText: '密码',
-                filled: true, // 添加填充
-                fillColor: Colors.grey[200], // 设置填充颜色为浅灰色
+                filled: true,
+                fillColor: Colors.grey[200],
               ),
               obscureText: true,
             ),
-            SizedBox(height: 20), // 添加一些空间
-            ElevatedButton(
-              onPressed: () {
-                login(_usernameController.text, _passwordController.text);
-              },
-              child: Text('登录'),
-              style: ElevatedButton.styleFrom(
-                primary: Color.fromARGB(255, 11, 84, 124), // 更改按钮颜色
+            SizedBox(height: 20),
+            AnimatedContainer(
+              duration: Duration(seconds: 2),
+              curve: Curves.easeIn,
+              width: 200,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () {
+                  login(_usernameController.text, _passwordController.text);
+                },
+                child: Text('登录'),
+                style: ElevatedButton.styleFrom(
+                  primary: Color.fromARGB(255, 11, 84, 124),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  elevation: 10,
+                  shadowColor: Colors.grey,
+                ),
               ),
             ),
-            SizedBox(height: 10), // 添加一些空间
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => RegisterPage()), // 点击注册按钮跳转到注册页面
-                );
-              },
-              child: Text('注册'),
-              style: ElevatedButton.styleFrom(
-                primary: const Color.fromARGB(255, 52, 18, 112), // 更改按钮颜色
+            SizedBox(height: 10),
+            AnimatedContainer(
+              duration: Duration(seconds: 2),
+              curve: Curves.easeIn,
+              width: 200,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => RegisterPage()),
+                  );
+                },
+                child: Text('注册'),
+                style: ElevatedButton.styleFrom(
+                  primary: const Color.fromARGB(255, 52, 18, 112),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  elevation: 10,
+                  shadowColor: Colors.grey,
+                ),
               ),
             ),
           ],
