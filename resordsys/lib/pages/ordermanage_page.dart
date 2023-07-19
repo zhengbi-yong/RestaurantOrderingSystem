@@ -48,7 +48,6 @@ class _OrderManagePageState extends State<OrderManagePage> {
         }
         orders[year]![month]![day]!.add(order);
       }
-      setState(() {}); // Adding this line of code
       return orders;
     } else {
       throw Exception('Failed to load orders');
@@ -102,114 +101,43 @@ class _OrderManagePageState extends State<OrderManagePage> {
         future: futureOrders,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
+            var data = snapshot.data!;
+            var years = data.keys.toList();
             return ListView.builder(
-              itemCount: snapshot.data!.length,
+              itemCount: years.length,
               itemBuilder: (context, yearIndex) {
-                var year = snapshot.data!.keys.elementAt(yearIndex);
+                var year = years[yearIndex];
+                var months = data[year]!.keys.toList();
                 return ExpansionTile(
                   title: Text('$year 年',
                       style:
                           TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  children: snapshot.data![year]!.keys.map((month) {
+                  children: months.map((month) {
+                    var days = data[year]![month]!.keys.toList();
                     return ExpansionTile(
                       title: Text('$month 月',
                           style: TextStyle(
                               fontSize: 18, fontWeight: FontWeight.bold)),
-                      children: snapshot.data![year]![month]!.keys.map((day) {
+                      children: days.map((day) {
+                        var orders = data[year]![month]![day]!;
                         return ExpansionTile(
                           title: Text('$day 日',
                               style: TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold)),
-                          children:
-                              snapshot.data![year]![month]![day]!.map((order) {
-                            return Card(
-                              elevation: 5.0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(15.0),
-                              ),
-                              child: ListTile(
-                                title: Text('${order['user']} 的订单',
-                                    style: TextStyle(color: Colors.blue)),
-                                trailing: Row(
-                                  // 使得尾部有两个按钮
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        showDialog(
-                                          context: context,
-                                          builder: (BuildContext context) {
-                                            return _OrderDetailsDialog(
-                                                order: order);
-                                          },
-                                        );
-                                      },
-                                      child: const Row(
-                                        children: [
-                                          Icon(Icons.view_list,
-                                              color: Colors.white),
-                                          Text('详情'),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8), // 添加两个按钮之间的空间
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        showDialog(
-                                          context: context,
-                                          builder: (BuildContext context) {
-                                            return AlertDialog(
-                                              title: Text('确认'),
-                                              content: Text('您确定要打印此订单吗？'),
-                                              actions: [
-                                                TextButton(
-                                                  child: Text('取消'),
-                                                  onPressed: () {
-                                                    Navigator.of(context).pop();
-                                                  },
-                                                ),
-                                                TextButton(
-                                                  child: Text('确认'),
-                                                  onPressed: () {
-                                                    printOrder(order['id']);
-                                                    Navigator.of(context).pop();
-                                                  },
-                                                ),
-                                              ],
-                                            );
-                                          },
-                                        );
-                                      },
-                                      child: const Row(
-                                        children: [
-                                          Icon(Icons.print,
-                                              color: Colors.white),
-                                          Text('打印'),
-                                        ],
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8), // 添加两个按钮之间的空间
-                                    ElevatedButton(
-                                      onPressed: () async {
-                                        await deleteOrder(order['id']);
-                                        setState(() {
-                                          snapshot.data![year]![month]![day]!
-                                              .remove(order);
-                                        });
-                                      },
-                                      child: const Row(
-                                        children: [
-                                          Icon(Icons.delete,
-                                              color: Colors.white),
-                                          Text('删除'),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }).toList(),
+                          children: [
+                            ListView.builder(
+                              shrinkWrap: true,
+                              physics: NeverScrollableScrollPhysics(),
+                              itemCount: orders.length,
+                              itemBuilder: (context, orderIndex) {
+                                return OrderItemCard(
+                                  order: orders[orderIndex],
+                                  printOrder: printOrder,
+                                  deleteOrder: deleteOrder,
+                                );
+                              },
+                            ),
+                          ],
                         );
                       }).toList(),
                     );
@@ -220,8 +148,104 @@ class _OrderManagePageState extends State<OrderManagePage> {
           } else if (snapshot.hasError) {
             return Text('${snapshot.error}');
           }
-          return CircularProgressIndicator();
+          return Center(child: CircularProgressIndicator());
         },
+      ),
+    );
+  }
+}
+
+class OrderItemCard extends StatelessWidget {
+  final Map<String, dynamic> order;
+  final Function(int) printOrder;
+  final Function(int) deleteOrder;
+
+  const OrderItemCard({
+    required this.order,
+    required this.printOrder,
+    required this.deleteOrder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 5.0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15.0),
+      ),
+      child: ListTile(
+        title:
+            Text('${order['user']} 的订单', style: TextStyle(color: Colors.blue)),
+        trailing: Row(
+          // 使得尾部有两个按钮
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return _OrderDetailsDialog(order: order);
+                  },
+                );
+              },
+              child: const Row(
+                children: [
+                  Icon(Icons.view_list, color: Colors.white),
+                  Text('详情'),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8), // 添加两个按钮之间的空间
+            ElevatedButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text('确认'),
+                      content: Text('您确定要打印此订单吗？'),
+                      actions: [
+                        TextButton(
+                          child: Text('取消'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                        TextButton(
+                          child: Text('确认'),
+                          onPressed: () {
+                            printOrder(order['id']);
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+              child: const Row(
+                children: [
+                  Icon(Icons.print, color: Colors.white),
+                  Text('打印'),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8), // 添加两个按钮之间的空间
+            ElevatedButton(
+              onPressed: () async {
+                await deleteOrder(order['id']);
+                // 删除订单后，可以通过回调或使用状态管理工具通知父组件刷新数据
+              },
+              child: const Row(
+                children: [
+                  Icon(Icons.delete, color: Colors.white),
+                  Text('删除'),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

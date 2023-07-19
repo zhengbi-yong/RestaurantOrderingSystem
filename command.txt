@@ -17,3 +17,5 @@ docker-compose build --no-cache
 docker system df
 # 清理缓存
 docker system prune -a --force
+# 格式化代码
+python -m yapf -i

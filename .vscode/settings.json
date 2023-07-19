@@ -1,8 +1,9 @@
 {
   "[python]": {
-    "editor.defaultFormatter": "ms-python.autopep8"
+    "editor.defaultFormatter": "ms-python.python"
   },
   "python.formatting.provider": "none",
   "python.linting.enabled": false,
-  "cmake.sourceDirectory": "C:/Sisyphus/Projects/RestaurantOrderingSystem/resordsys/linux"
+  "cmake.sourceDirectory": "C:/Sisyphus/Projects/RestaurantOrderingSystem/resordsys/linux",
+  "python.analysis.typeCheckingMode": "off"
 }

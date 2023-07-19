@@ -1,48 +1,37 @@
 #!/usr/bin/env python3
-from flask import Flask, jsonify, request
-from flask import session
-from flask import make_response
-from flask_cors import CORS
-from models import MenuItem, Order, User
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import exc
-import json
-from werkzeug.security import generate_password_hash, check_password_hash
-import os
 import codecs
+import json
 import logging
-from datetime import datetime, date, timedelta
-import time
-from database import db
-import sys
-from flask_socketio import SocketIO, emit
+import os
 import smtplib
+import sys
+import time
+from datetime import date, datetime, timedelta
+from email import encoders
+from email.header import Header
+from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from email.header import Header
-import smtplib
+
+from database import db
+from flask import Flask, jsonify, make_response, request, session
+from flask_cors import CORS
+from flask_socketio import SocketIO, emit
+from flask_sqlalchemy import SQLAlchemy
+from models import MenuItem, Order, User
+from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from email.mime.base import MIMEBase
-from email import encoders
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib import colors
-from reportlab.platypus import TableStyle
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Frame, PageTemplate
-from reportlab.lib import colors
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import PageBreak
-from reportlab.platypus import NextPageTemplate
-from reportlab.platypus import FrameBreak
+from reportlab.pdfgen import canvas
+from reportlab.platypus import (Frame, FrameBreak, NextPageTemplate, PageBreak,
+                                PageTemplate, Paragraph, SimpleDocTemplate,
+                                Spacer, Table, TableStyle)
+from sqlalchemy import exc
+from werkzeug.security import check_password_hash, generate_password_hash
+
 # 创建日志记录器
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -52,9 +41,8 @@ file_handler = logging.FileHandler("app.log")
 file_handler.setLevel(logging.DEBUG)
 
 # 创建日志记录格式
-log_format = logging.Formatter(
-    "[%(asctime)s] %(levelname)s: %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
-)
+log_format = logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s",
+                               datefmt="%Y-%m-%d %H:%M:%S")
 file_handler.setFormatter(log_format)
 
 # 创建控制台处理器
@@ -83,7 +71,8 @@ def create_app():
 
 def configure_db(app):
     logger.info("开始配置数据库")
-    app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql://root:sisyphus@db:3306/restaurant"
+    app.config[
+        "SQLALCHEMY_DATABASE_URI"] = f"mysql://root:sisyphus@db:3306/restaurant"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     logger.info("数据库配置完成")
 
@@ -126,7 +115,8 @@ def register():
 
     if not username or not password or not identity:
         logger.warning("缺少用户名、密码或身份信息")
-        return jsonify({"message": "Missing username, password or identity"}), 400
+        return jsonify({"message":
+                        "Missing username, password or identity"}), 400
 
     with app.app_context():
         user = User.query.filter_by(username=username).first()
@@ -134,9 +124,9 @@ def register():
             logger.warning("用户已存在")
             return jsonify({"message": "User already exists"}), 400
         password_hash = generate_password_hash(password)
-        new_user = User(
-            username=username, password_hash=password_hash, identity=identity
-        )
+        new_user = User(username=username,
+                        password_hash=password_hash,
+                        identity=identity)
         db.session.add(new_user)
         db.session.commit()
     logger.info("用户注册成功")
@@ -169,7 +159,8 @@ def login():
                 return response, 200
             else:
                 logger.debug(f"用户 {username} 密码错误")
-                return jsonify({"message": "Invalid username or password"}), 400
+                return jsonify({"message":
+                                "Invalid username or password"}), 400
         else:
             logger.debug(f"用户 {username} 不存在")
             return jsonify({"message": "Invalid username or password"}), 400
@@ -188,9 +179,9 @@ def get_menu():
 def add_menu_item():
     logger.debug(f"添加菜单项")
     data = request.get_json()
-    new_item = MenuItem(
-        name=data["name"], price=data["price"], category=data["category"]
-    )
+    new_item = MenuItem(name=data["name"],
+                        price=data["price"],
+                        category=data["category"])
     with app.app_context():
         db.session.add(new_item)
         db.session.commit()
@@ -269,8 +260,7 @@ def get_orders():
 def get_submitted_orders():
     with app.app_context():
         order_items = Order.query.filter_by(
-            isSubmitted=True, isPaid=False
-        ).all()  # 修改这里，返回所有已提交且未支付的订单
+            isSubmitted=True, isPaid=False).all()  # 修改这里，返回所有已提交且未支付的订单
         orders = [item.serialize() for item in order_items]
         return jsonify(orders)
 
@@ -278,7 +268,8 @@ def get_submitted_orders():
 @app.route("/orders/confirmed", methods=["GET"])
 def get_confirmed_orders():
     with app.app_context():
-        order_items = Order.query.filter_by(isConfirmed=True, isCompleted=False).all()
+        order_items = Order.query.filter_by(isConfirmed=True,
+                                            isCompleted=False).all()
         orders = [item.serialize() for item in order_items]
         return jsonify(orders)
 
@@ -314,7 +305,8 @@ def complete_order_item():
                 db.session.commit()
                 socketio.emit("dish prepared", {"order_id": order_id})
                 logger.debug(f"已发射dish prepared事件,通知前端有新订单确认")
-                return jsonify({"message": "Order item completed successfully"})
+                return jsonify(
+                    {"message": "Order item completed successfully"})
             else:
                 return jsonify({"message": "Order item not found"})
         else:
@@ -339,7 +331,8 @@ def serve_order_item():
                 socketio.emit("dish served", {"order_id": order_id})
                 return jsonify({"message": "Order item served successfully"})
             else:
-                return jsonify({"message": "Order item not prepared or not found"})
+                return jsonify(
+                    {"message": "Order item not prepared or not found"})
         else:
             return jsonify({"message": "Order not found"})
 
@@ -385,9 +378,8 @@ def modify_order(order_id):
 
     updated_order = request.json
     order.user = updated_order["user"]
-    order.timestamp = datetime.strptime(
-        updated_order["timestamp"], "%Y-%m-%dT%H:%M:%S"
-    )  # 修改格式字符串
+    order.timestamp = datetime.strptime(updated_order["timestamp"],
+                                        "%Y-%m-%dT%H:%M:%S")  # 修改格式字符串
     order.total = updated_order["total"]
     # order.isSubmitted = updated_order["isSubmitted"]
     # order.isConfirmed = updated_order["isConfirmed"]
@@ -419,6 +411,7 @@ def pay_order():
         else:
             return jsonify({"message": "Order not found"})
 
+
 @app.route("/orders/print", methods=["POST"])
 def print_order():
 
@@ -428,17 +421,31 @@ def print_order():
         order = Order.query.get(order_id)
         if order:
             # Register a Chinese font
-            pdfmetrics.registerFont(TTFont('AR PL UMing CN', '/usr/share/fonts/truetype/arphic/uming.ttc'))
+            pdfmetrics.registerFont(
+                TTFont('AR PL UMing CN',
+                       '/usr/share/fonts/truetype/arphic/uming.ttc'))
 
             # Create a new PDF with Reportlab
-            doc = SimpleDocTemplate("order.pdf", pagesize=letter,
-                                    rightMargin=72, leftMargin=72,
-                                    topMargin=72, bottomMargin=18)
-            
+            doc = SimpleDocTemplate("order.pdf",
+                                    pagesize=letter,
+                                    rightMargin=72,
+                                    leftMargin=72,
+                                    topMargin=72,
+                                    bottomMargin=18)
+
             # Define two columns with Frames
-            frame1 = Frame(doc.leftMargin, doc.bottomMargin, doc.width/2-7, doc.height, id='col1')
-            frame2 = Frame(doc.leftMargin + doc.width/2 + 7, doc.bottomMargin, doc.width/2-6, doc.height, id='col2')
-            doc.addPageTemplates([PageTemplate(id='TwoCol', frames=[frame1, frame2])])
+            frame1 = Frame(doc.leftMargin,
+                           doc.bottomMargin,
+                           doc.width / 2 - 7,
+                           doc.height,
+                           id='col1')
+            frame2 = Frame(doc.leftMargin + doc.width / 2 + 7,
+                           doc.bottomMargin,
+                           doc.width / 2 - 6,
+                           doc.height,
+                           id='col2')
+            doc.addPageTemplates(
+                [PageTemplate(id='TwoCol', frames=[frame1, frame2])])
 
             # Create a list for all the flowables
             story = []
@@ -453,7 +460,8 @@ def print_order():
             styles["Title"].leading = 30
             story.append(Paragraph(f"订单编号： {order.id}", styles["Title"]))
             story.append(Paragraph(f"顾客：    {order.user}", styles["BodyText"]))
-            story.append(Paragraph(f"总价：    {order.total}  元", styles["BodyText"]))
+            story.append(
+                Paragraph(f"总价：    {order.total}  元", styles["BodyText"]))
 
             order_info = json.loads(order.items)
             data = [["菜品", "数量", "单价"]]  # Add table header
@@ -464,13 +472,16 @@ def print_order():
             table = Table(data, hAlign='CENTER')
 
             table_style = TableStyle([
-                ('FONTNAME', (0,0), (-1,-1), 'AR PL UMing CN'),
-                ('FONTSIZE', (0,0), (-1,-1), 20),
-                ('LEADING', (0,0), (-1,-1), 30),  # 新增行间距设置
-                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),  # table header color
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),  # table header text color
+                ('FONTNAME', (0, 0), (-1, -1), 'AR PL UMing CN'),
+                ('FONTSIZE', (0, 0), (-1, -1), 20),
+                ('LEADING', (0, 0), (-1, -1), 30),  # 新增行间距设置
+                ('BACKGROUND', (0, 0), (-1, 0),
+                 colors.grey),  # table header color
+                ('TEXTCOLOR', (0, 0), (-1, 0),
+                 colors.whitesmoke),  # table header text color
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # all text centered
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')  # all text middle aligned
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'
+                 )  # all text middle aligned
             ])
             table.setStyle(table_style)
 
@@ -482,7 +493,8 @@ def print_order():
             # Add the same content for the second column
             story.append(Paragraph(f"订单编号： {order.id}", styles["Title"]))
             story.append(Paragraph(f"顾客：    {order.user}", styles["BodyText"]))
-            story.append(Paragraph(f"总价：    {order.total}  元", styles["BodyText"]))
+            story.append(
+                Paragraph(f"总价：    {order.total}  元", styles["BodyText"]))
             story.append(table)
 
             # Save the PDF
@@ -522,8 +534,6 @@ def print_order():
             return jsonify({"message": "Order not found"}), 404
 
 
-
-
 @app.route("/summary", methods=["GET"])
 def get_summary():
     # 获取当天的日期
@@ -532,12 +542,9 @@ def get_summary():
     end_time = datetime.combine(today, datetime.max.time())
 
     # 计算当天的营业额
-    revenue_today = (
-        db.session.query(db.func.sum(Order.total))
-        .filter(Order.timestamp.between(start_time, end_time), Order.isPaid == True)
-        .scalar()
-        or 0.0
-    )
+    revenue_today = (db.session.query(db.func.sum(Order.total)).filter(
+        Order.timestamp.between(start_time, end_time), Order.isPaid
+        == True).scalar() or 0.0)
 
     # 计算用户数量
     user_count = db.session.query(User).count()
@@ -548,14 +555,12 @@ def get_summary():
     # 计算订单数量
     order_count = db.session.query(Order).count()
 
-    return jsonify(
-        {
-            "revenueToday": revenue_today,
-            "userCount": user_count,
-            "menuItemCount": menu_item_count,
-            "orderCount": order_count,
-        }
-    )
+    return jsonify({
+        "revenueToday": revenue_today,
+        "userCount": user_count,
+        "menuItemCount": menu_item_count,
+        "orderCount": order_count,
+    })
 
 
 if __name__ == "__main__":

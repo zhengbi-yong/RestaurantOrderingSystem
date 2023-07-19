@@ -67,9 +67,11 @@ class _WaiterPageState extends State<WaiterPage> {
     final response =
         await http.get(Uri.parse('${Config.API_URL}/orders/submitted'));
     if (response.statusCode == 200) {
-      setState(() {
-        orders = jsonDecode(response.body);
-      });
+      if (mounted) {
+        setState(() {
+          orders = jsonDecode(response.body);
+        });
+      }
     } else {
       print('获取订单列表失败');
     }
@@ -111,6 +113,17 @@ class _WaiterPageState extends State<WaiterPage> {
       fetchOrders();
     } else {
       print('支付订单失败');
+    }
+  }
+
+  Future<void> printOrder(int id) async {
+    final response = await http.post(
+      Uri.parse('${Config.API_URL}/orders/print'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'id': id}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to print order');
     }
   }
 
@@ -167,58 +180,123 @@ class _WaiterPageState extends State<WaiterPage> {
                         : null,
                   );
                 }).toList(),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => EditOrderPage(order)),
-                    ).then((_) {
-                      fetchOrders();
-                    });
-                  },
-                  child: Text('修改订单'),
-                ),
-                ElevatedButton(
-                  onPressed: () => confirmOrder(order['id']),
-                  child: Text('确认订单'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: new Text("确认付款"),
-                          content: new Text("你确定要确认付款吗？"),
-                          actions: <Widget>[
-                            new TextButton(
-                              child: new Text("取消"),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                            new TextButton(
-                              child: new Text("确认"),
-                              onPressed: () {
-                                payOrder(order['id']);
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ],
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: <Widget>[
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => EditOrderPage(order)),
+                        ).then((_) {
+                          fetchOrders();
+                        });
+                      },
+                      child: Text('修改订单'),
+                      style: ButtonStyle(
+                        backgroundColor:
+                            MaterialStateProperty.all<Color>(Colors.blue),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => confirmOrder(order['id']),
+                      child: Text('确认订单'),
+                      style: ButtonStyle(
+                        backgroundColor:
+                            MaterialStateProperty.all<Color>(Colors.green),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text('确认'),
+                              content: Text('您确定要打印此订单吗？'),
+                              actions: [
+                                TextButton(
+                                  child: Text('取消'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                                TextButton(
+                                  child: Text('确认'),
+                                  onPressed: () {
+                                    printOrder(order['id']).catchError((error) {
+                                      // Handle the error here
+                                      print(error);
+                                    });
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ],
+                            );
+                          },
                         );
                       },
-                    );
-                  },
-                  child: Text('确认付款'),
-                  style: ButtonStyle(
-                    backgroundColor:
-                        MaterialStateProperty.all<Color>(Colors.red),
-                  ),
+                      child: Text('打印订单'),
+                      style: ButtonStyle(
+                        backgroundColor:
+                            MaterialStateProperty.all<Color>(Colors.orange),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: new Text("确认付款"),
+                              content: new Text("你确定要确认付款吗？"),
+                              actions: <Widget>[
+                                new TextButton(
+                                  child: new Text("取消"),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                                new TextButton(
+                                  child: new Text("确认"),
+                                  onPressed: () {
+                                    payOrder(order['id']);
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      child: Text('确认付款'),
+                      style: ButtonStyle(
+                        backgroundColor:
+                            MaterialStateProperty.all<Color>(Colors.red),
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                    '订单状态:${order['isSubmitted'] ? '已提交' : '未提交'} / ${order['isConfirmed'] ? '已确认' : '未确认'} / ${order['isCompleted'] ? '已完成' : '未完成'} / ${order['isPaid'] ? '已付款' : '未付款'}'),
-                Text('订单总额: ${order['total']} 元'),
+                AnimatedCrossFade(
+                  duration: const Duration(milliseconds: 200),
+                  firstChild: const Text('订单状态:已提交/已确认/已完成/已付款'),
+                  secondChild: Text(
+                      '订单状态:${order['isSubmitted'] ? '已提交' : '未提交'} / ${order['isConfirmed'] ? '已确认' : '未确认'} / ${order['isCompleted'] ? '已完成' : '未完成'} / ${order['isPaid'] ? '已付款' : '未付款'}'),
+                  crossFadeState: order['isSubmitted'] &&
+                          order['isConfirmed'] &&
+                          order['isCompleted'] &&
+                          order['isPaid']
+                      ? CrossFadeState.showFirst
+                      : CrossFadeState.showSecond,
+                ),
+                AnimatedContainer(
+                  duration: Duration(seconds: 1),
+                  width: 200.0,
+                  height: 50.0,
+                  padding: EdgeInsets.all(10.0),
+                  child: Text('订单总额: ${order['total']} 元'),
+                ),
               ],
             ),
           );

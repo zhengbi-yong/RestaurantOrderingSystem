@@ -36,6 +36,9 @@ dependencies:
   qr_code_scanner: ^0.5.2
   js: ^0.6.2
   provider: ^5.0.0
+  pdf: any
+  printing: any
+  path_provider: any
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
