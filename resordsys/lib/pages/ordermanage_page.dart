@@ -19,6 +19,7 @@ class OrderManagePage extends StatefulWidget {
 class _OrderManagePageState extends State<OrderManagePage> {
   late Future<Map<String, Map<String, Map<String, List<dynamic>>>>>
       futureOrders;
+  Map<String, Map<String, Map<String, List<dynamic>>>>? orders;
 
   @override
   void initState() {
@@ -65,12 +66,36 @@ class _OrderManagePageState extends State<OrderManagePage> {
     }
   }
 
-  Future<void> deleteOrder(int orderId) async {
+  Future<bool> deleteOrder(int orderId) async {
     final response = await http.delete(
       Uri.parse('${Config.API_URL}/orders/$orderId'),
     );
-    if (response.statusCode != 200) {
+    if (response.statusCode == 200) {
+      return true;
+    } else {
       throw Exception('Failed to delete order');
+    }
+  }
+
+// 在 deleteOrderLocally 中不再更新 futureOrders
+  void deleteOrderLocally(int orderId, String year, String month, String day) {
+    if (orders != null) {
+      setState(() {
+        orders![year]![month]![day]!
+            .removeWhere((order) => order['id'] == orderId);
+      });
+    }
+  }
+
+  Future<void> handleDeleteOrder(
+      int orderId, String year, String month, String day) async {
+    var success = await deleteOrder(orderId);
+    if (success) {
+      deleteOrderLocally(orderId, year, month, day);
+      // 重新获取一次订单
+      setState(() {
+        futureOrders = fetchOrders();
+      });
     }
   }
 
@@ -134,6 +159,11 @@ class _OrderManagePageState extends State<OrderManagePage> {
                                   order: orders[orderIndex],
                                   printOrder: printOrder,
                                   deleteOrder: deleteOrder,
+                                  deleteOrderLocally: deleteOrderLocally,
+                                  handleDeleteOrder: handleDeleteOrder,
+                                  year: year,
+                                  month: month,
+                                  day: day,
                                 );
                               },
                             ),
@@ -159,11 +189,21 @@ class OrderItemCard extends StatelessWidget {
   final Map<String, dynamic> order;
   final Function(int) printOrder;
   final Function(int) deleteOrder;
+  final Function(int, String, String, String) deleteOrderLocally;
+  final Function(int, String, String, String) handleDeleteOrder;
+  final String year;
+  final String month;
+  final String day;
 
   const OrderItemCard({
     required this.order,
     required this.printOrder,
     required this.deleteOrder,
+    required this.deleteOrderLocally,
+    required this.handleDeleteOrder,
+    required this.year,
+    required this.month,
+    required this.day,
   });
 
   @override
@@ -233,9 +273,32 @@ class OrderItemCard extends StatelessWidget {
             ),
             const SizedBox(width: 8), // 添加两个按钮之间的空间
             ElevatedButton(
-              onPressed: () async {
-                await deleteOrder(order['id']);
-                // 删除订单后，可以通过回调或使用状态管理工具通知父组件刷新数据
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text('确认删除'),
+                      content: Text('您确定要删除此订单吗？'),
+                      actions: [
+                        TextButton(
+                          child: Text('取消'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                        TextButton(
+                          child: Text('删除'),
+                          onPressed: () async {
+                            await handleDeleteOrder(
+                                order['id'], year, month, day);
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
               },
               child: const Row(
                 children: [

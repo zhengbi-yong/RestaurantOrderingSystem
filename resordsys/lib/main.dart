@@ -29,6 +29,7 @@ class LoginInfo with ChangeNotifier {
 }
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   final loginInfo = LoginInfo();
   runApp(
     ChangeNotifierProvider(

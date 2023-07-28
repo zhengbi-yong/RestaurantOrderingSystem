@@ -7,6 +7,10 @@ import '../config.dart';
 import 'waiterorder_page.dart';
 import 'editorder_page.dart';
 import 'ordermanage_page.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:flutter/services.dart';
 
 IO.Socket? socket;
 
@@ -21,12 +25,12 @@ class WaiterPage extends StatefulWidget {
 
 class _WaiterPageState extends State<WaiterPage> {
   List<dynamic> orders = [];
-
+  late Future<pw.Font> _font;
   @override
   void initState() {
     super.initState();
     fetchOrders();
-
+    _font = loadFont();
     socket = IO.io('${Config.API_URL}', <String, dynamic>{
       'transports': ['websocket'],
       'autoConnect': false,
@@ -75,6 +79,68 @@ class _WaiterPageState extends State<WaiterPage> {
     } else {
       print('获取订单列表失败');
     }
+  }
+
+  Future<pw.Font> loadFont() async {
+    final fontData = await rootBundle.load("assets/CN.ttf");
+    return pw.Font.ttf(fontData);
+  }
+
+  Future<pw.Document> generateOrderPdf(
+      int id, Map<String, dynamic> order, pw.Font font) async {
+    final pw.Document pdf = pw.Document();
+
+    // Get the order data
+    final orderData = _buildOrder(id, order, font);
+
+    // Calculate the number of pages
+    final numPages = (orderData.length / 20).ceil();
+
+    // Generate the pages
+    for (var i = 0; i < numPages; i++) {
+      // Get the data for this page
+      final pageData = orderData.skip(i * 20).take(20).toList();
+
+      pdf.addPage(
+        pw.Page(
+          build: (pw.Context context) => pw.Row(
+            children: [
+              pw.Expanded(
+                child: pw.Column(
+                  children: pageData,
+                ),
+              ),
+              pw.Expanded(
+                child: pw.Column(
+                  children: pageData,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return pdf;
+  }
+
+  List<pw.Widget> _buildOrder(
+      int id, Map<String, dynamic> order, pw.Font font) {
+    return [
+      pw.Text('订单: $id 顾客: ${order['user']}',
+          style: pw.TextStyle(fontSize: 40, font: font)),
+      pw.SizedBox(height: 20),
+      ..._buildItems(order, font),
+    ];
+  }
+
+  List<pw.Widget> _buildItems(Map<String, dynamic> order, pw.Font font) {
+    return order['items'].entries.map<pw.Widget>((item) {
+      return pw.Text(
+        '${item.value['count']}x${item.key}    ${item.value['price']} 元',
+        style: pw.TextStyle(fontSize: 20, font: font),
+      );
+    }).toList();
   }
 
   Future<void> confirmOrder(int id) async {
@@ -180,103 +246,126 @@ class _WaiterPageState extends State<WaiterPage> {
                         : null,
                   );
                 }).toList(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: <Widget>[
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => EditOrderPage(order)),
-                        ).then((_) {
-                          fetchOrders();
-                        });
-                      },
-                      child: Text('修改订单'),
-                      style: ButtonStyle(
-                        backgroundColor:
-                            MaterialStateProperty.all<Color>(Colors.blue),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal, // 设置滚动方向为水平方向
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: <Widget>[
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => EditOrderPage(order)),
+                          ).then((_) {
+                            fetchOrders();
+                          });
+                        },
+                        child: Text('修改订单'),
+                        style: ButtonStyle(
+                          backgroundColor:
+                              MaterialStateProperty.all<Color>(Colors.blue),
+                        ),
                       ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => confirmOrder(order['id']),
-                      child: Text('确认订单'),
-                      style: ButtonStyle(
-                        backgroundColor:
-                            MaterialStateProperty.all<Color>(Colors.green),
+                      ElevatedButton(
+                        onPressed: () => confirmOrder(order['id']),
+                        child: Text('确认订单'),
+                        style: ButtonStyle(
+                          backgroundColor:
+                              MaterialStateProperty.all<Color>(Colors.green),
+                        ),
                       ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: Text('确认'),
-                              content: Text('您确定要打印此订单吗？'),
-                              actions: [
-                                TextButton(
-                                  child: Text('取消'),
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                ),
-                                TextButton(
-                                  child: Text('确认'),
-                                  onPressed: () {
-                                    printOrder(order['id']).catchError((error) {
-                                      // Handle the error here
-                                      print(error);
-                                    });
-                                    Navigator.of(context).pop();
-                                  },
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      },
-                      child: Text('打印订单'),
-                      style: ButtonStyle(
-                        backgroundColor:
-                            MaterialStateProperty.all<Color>(Colors.orange),
+                      ElevatedButton(
+                        onPressed: () async {
+                          // Use the loaded font to generate the PDF
+                          final font = await _font;
+                          final pdf =
+                              await generateOrderPdf(order['id'], order, font);
+                          final bytes = await pdf.save();
+                          Printing.layoutPdf(
+                            onLayout: (PdfPageFormat format) async => bytes,
+                            name: 'order_${order['id']}.pdf',
+                            format: PdfPageFormat.a4,
+                          );
+                        },
+                        child: Text('本地打印'),
+                        style: ButtonStyle(
+                          backgroundColor:
+                              MaterialStateProperty.all<Color>(Colors.purple),
+                        ),
                       ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: new Text("确认付款"),
-                              content: new Text("你确定要确认付款吗？"),
-                              actions: <Widget>[
-                                new TextButton(
-                                  child: new Text("取消"),
-                                  onPressed: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                ),
-                                new TextButton(
-                                  child: new Text("确认"),
-                                  onPressed: () {
-                                    payOrder(order['id']);
-                                    Navigator.of(context).pop();
-                                  },
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      },
-                      child: Text('确认付款'),
-                      style: ButtonStyle(
-                        backgroundColor:
-                            MaterialStateProperty.all<Color>(Colors.red),
+                      ElevatedButton(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text('确认'),
+                                content: Text('您确定要打印此订单吗？'),
+                                actions: [
+                                  TextButton(
+                                    child: Text('取消'),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                  TextButton(
+                                    child: Text('确认'),
+                                    onPressed: () {
+                                      printOrder(order['id'])
+                                          .catchError((error) {
+                                        // Handle the error here
+                                        print(error);
+                                      });
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                        child: Text('远程打印'),
+                        style: ButtonStyle(
+                          backgroundColor:
+                              MaterialStateProperty.all<Color>(Colors.orange),
+                        ),
                       ),
-                    ),
-                  ],
+                      ElevatedButton(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: new Text("确认付款"),
+                                content: new Text("你确定要确认付款吗？"),
+                                actions: <Widget>[
+                                  new TextButton(
+                                    child: new Text("取消"),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                  new TextButton(
+                                    child: new Text("确认"),
+                                    onPressed: () {
+                                      payOrder(order['id']);
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                        child: Text('确认付款'),
+                        style: ButtonStyle(
+                          backgroundColor:
+                              MaterialStateProperty.all<Color>(Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 AnimatedCrossFade(
                   duration: const Duration(milliseconds: 200),

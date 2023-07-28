@@ -19,21 +19,19 @@ class ChefPage extends StatefulWidget {
 
 class _ChefPageState extends State<ChefPage> {
   List<dynamic> orders = [];
+
   @override
   void initState() {
     super.initState();
     fetchOrders();
 
-    // 初始化socket连接
     socket = IO.io('${Config.API_URL}', <String, dynamic>{
       'transports': ['websocket'],
       'autoConnect': false,
     });
 
-    // 连接到服务器
     socket?.connect();
 
-    // 当服务器发送 'order confirmed' 事件时触发
     socket?.on('order confirmed', (_) {
       fetchOrders();
     });
@@ -78,21 +76,31 @@ class _ChefPageState extends State<ChefPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('厨师',
-            style: TextStyle(color: Colors.white, fontSize: 20)), // 修改标题颜色和字体大小
-        backgroundColor: Colors.blue, // 修改App Bar背景颜色
+        title: Text('厨师', style: TextStyle(color: Colors.white, fontSize: 20)),
+        backgroundColor: Colors.blue,
       ),
       body: ListView.builder(
         itemCount: orders.length,
         itemBuilder: (context, index) {
           var order = orders[index];
+
+          bool allItemsPrepared = (order['items'] as Map<String, dynamic>)
+              .values
+              .every((item) => item['isPrepared']);
+
+          if (order['isSubmitted'] &&
+              order['isConfirmed'] &&
+              order['isPaid'] &&
+              allItemsPrepared) {
+            return SizedBox.shrink();
+          }
+
           return Material(
             color: Colors.transparent,
             child: ExpansionTile(
               title: Text('${order['user']} 的订单',
-                  style: TextStyle(
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.bold)), // 修改字体大小和样式
+                  style:
+                      TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold)),
               children: order['items'].entries.map<Widget>((itemEntry) {
                 var itemName = itemEntry.key;
                 var itemDetails = itemEntry.value;
@@ -103,15 +111,13 @@ class _ChefPageState extends State<ChefPage> {
                   color: backgroundColor,
                   child: Card(
                     child: ListTile(
-                      title: Text(itemName,
-                          style: TextStyle(fontSize: 16)), // 修改字体大小
+                      title: Text(itemName, style: TextStyle(fontSize: 16)),
                       subtitle: Text(itemDetails['isPrepared'] ? '已备菜' : '未备菜',
-                          style: TextStyle(fontSize: 14)), // 修改字体大小
+                          style: TextStyle(fontSize: 14)),
                       trailing: !itemDetails['isPrepared']
                           ? ElevatedButton(
                               onPressed: () async {
                                 await completeOrderItem(order['id'], itemName);
-                                // 如果所有的菜品都已经完成，那么订单就从列表中移除
                                 fetchOrders();
                               },
                               child: Text('出菜'),
@@ -126,7 +132,7 @@ class _ChefPageState extends State<ChefPage> {
         },
       ),
       bottomNavigationBar: BottomAppBar(
-        color: Colors.blue, // 修改BottomAppBar颜色为蓝色
+        color: Colors.blue,
         child: Row(
           children: [
             ElevatedButton(
@@ -136,11 +142,9 @@ class _ChefPageState extends State<ChefPage> {
                   MaterialPageRoute(builder: (context) => MenuItemManagePage()),
                 );
               },
-              child: Text('菜品管理',
-                  style: TextStyle(color: Colors.white)), // 修改文字颜色为白色
+              child: Text('菜品管理', style: TextStyle(color: Colors.white)),
               style: ButtonStyle(
-                  backgroundColor:
-                      MaterialStateProperty.all(Colors.orange)), // 修改按钮颜色为橙色
+                  backgroundColor: MaterialStateProperty.all(Colors.orange)),
             ),
           ],
         ),
