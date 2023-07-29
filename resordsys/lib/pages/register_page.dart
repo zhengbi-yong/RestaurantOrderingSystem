@@ -18,6 +18,13 @@ class _RegisterPageState extends State<RegisterPage> {
   final _passwordController = TextEditingController();
   String dropdownValue = '顾客';
 
+  // 定义颜色
+  final color1 = Color(0xFF1c595a);
+  final color2 = Color(0xFF458d8c);
+  final color3 = Color(0xFF58a6a6);
+  final color4 = Color(0xFF67734d);
+  final color5 = Color(0xFFd7d8ac);
+
   Future<void> register(String username, String password) async {
     log('请求注册');
     final response = await http.post(
@@ -39,15 +46,15 @@ class _RegisterPageState extends State<RegisterPage> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('注册成功'),
-          content: Text('用户注册成功，您可以使用新账号登录。'),
+          title: Text('注册成功', style: TextStyle(color: color2)),
+          content: Text('用户注册成功，您可以使用新账号登录。', style: TextStyle(color: color4)),
           actions: [
             TextButton(
               onPressed: () {
                 // 跳转到登录页面
                 Navigator.pushNamed(context, '/login');
               },
-              child: Text('去登录'),
+              child: Text('去登录', style: TextStyle(color: color1)),
             ),
           ],
         ),
@@ -57,15 +64,15 @@ class _RegisterPageState extends State<RegisterPage> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('注册失败'),
-          content: Text('用户注册失败，请重试。'),
+          title: Text('注册失败', style: TextStyle(color: color2)),
+          content: Text('用户注册失败，请重试。', style: TextStyle(color: color4)),
           actions: [
             TextButton(
               onPressed: () {
                 // 添加您想要的操作，如重试注册
                 Navigator.pushNamed(context, '/register');
               },
-              child: Text('OK'),
+              child: Text('OK', style: TextStyle(color: color1)),
             ),
           ],
         ),
@@ -78,7 +85,8 @@ class _RegisterPageState extends State<RegisterPage> {
     log('注册页构建');
     return Scaffold(
       appBar: AppBar(
-        title: Text('注册'),
+        title: Text('注册', style: TextStyle(color: color5, fontSize: 20)),
+        backgroundColor: color3,
       ),
       body: Padding(
         padding: EdgeInsets.all(16.0),
@@ -97,42 +105,44 @@ class _RegisterPageState extends State<RegisterPage> {
                   .map<DropdownMenuItem<String>>((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
-                  child: Text(value),
+                  child: Text(value, style: TextStyle(color: color2)),
                 );
               }).toList(),
+              dropdownColor: color5,
             ),
             SizedBox(height: 10), // Add space
-            Card(
-              child: ListTile(
-                leading: Icon(Icons.person),
-                title: TextField(
-                  controller: _usernameController,
-                  decoration: InputDecoration(hintText: '用户名'),
-                ),
+            TextField(
+              controller: _usernameController,
+              decoration: InputDecoration(
+                hintText: '用户名',
+                filled: true,
+                fillColor: color2,
               ),
             ),
-            SizedBox(height: 10), // Add space
-            Card(
-              child: ListTile(
-                leading: Icon(Icons.lock),
-                title: TextField(
-                  controller: _passwordController,
-                  decoration: InputDecoration(hintText: '密码'),
-                  obscureText: true,
-                ),
+            SizedBox(height: 10),
+            TextField(
+              controller: _passwordController,
+              decoration: InputDecoration(
+                hintText: '密码',
+                filled: true,
+                fillColor: color2,
               ),
+              obscureText: true,
             ),
-            SizedBox(height: 10), // Add space
-            ElevatedButton(
-              onPressed: () {
-                register(_usernameController.text, _passwordController.text);
-              },
-              child: Text('注册'),
-              style: ElevatedButton.styleFrom(
-                primary: Colors.blue, // Change the color of the button
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(
-                      12), // Change the shape of the button
+            SizedBox(height: 20),
+            Container(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () {
+                  register(_usernameController.text, _passwordController.text);
+                },
+                child: Text('注册'),
+                style: ElevatedButton.styleFrom(
+                  primary: color1,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                 ),
               ),
             ),

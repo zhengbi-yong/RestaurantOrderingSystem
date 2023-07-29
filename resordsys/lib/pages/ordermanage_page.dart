@@ -20,6 +20,11 @@ class _OrderManagePageState extends State<OrderManagePage> {
   late Future<Map<String, Map<String, Map<String, List<dynamic>>>>>
       futureOrders;
   Map<String, Map<String, Map<String, List<dynamic>>>>? orders;
+  final color1 = Color(0xFF1c595a);
+  final color2 = Color(0xFF458d8c);
+  final color3 = Color(0xFF58a6a6);
+  final color4 = Color(0xFF67734d);
+  final color5 = Color(0xFFd7d8ac);
 
   @override
   void initState() {
@@ -120,7 +125,9 @@ class _OrderManagePageState extends State<OrderManagePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('订单管理'),
+        title: Text('订单管理',
+            style: TextStyle(color: color5, fontSize: 20)), // 修改标题颜色和字体大小
+        backgroundColor: color3, // 修改App Bar背景颜色
       ),
       body: FutureBuilder<Map<String, Map<String, Map<String, List<dynamic>>>>>(
         future: futureOrders,
@@ -185,6 +192,12 @@ class _OrderManagePageState extends State<OrderManagePage> {
   }
 }
 
+const color1 = Color(0xFF1c595a);
+const color2 = Color(0xFF458d8c);
+const color3 = Color(0xFF58a6a6);
+const color4 = Color(0xFF67734d);
+const color5 = Color(0xFFd7d8ac);
+
 class OrderItemCard extends StatelessWidget {
   final Map<String, dynamic> order;
   final Function(int) printOrder;
@@ -214,10 +227,9 @@ class OrderItemCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(15.0),
       ),
       child: ListTile(
-        title:
-            Text('${order['user']} 的订单', style: TextStyle(color: Colors.blue)),
+        title: Text('${order['user']} 的订单',
+            style: TextStyle(color: color2)), // 修改订单用户的颜色
         trailing: Row(
-          // 使得尾部有两个按钮
           mainAxisSize: MainAxisSize.min,
           children: [
             ElevatedButton(
@@ -229,11 +241,14 @@ class OrderItemCard extends StatelessWidget {
                   },
                 );
               },
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.view_list, color: Colors.white),
-                  Text('详情'),
+                  Icon(Icons.view_list, color: color5),
+                  Text('详情', style: TextStyle(color: color5)),
                 ],
+              ),
+              style: ElevatedButton.styleFrom(
+                primary: color1, // 修改按钮背景颜色
               ),
             ),
             const SizedBox(width: 8), // 添加两个按钮之间的空间
@@ -264,11 +279,14 @@ class OrderItemCard extends StatelessWidget {
                   },
                 );
               },
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.print, color: Colors.white),
-                  Text('打印'),
+                  Icon(Icons.print, color: color5),
+                  Text('打印', style: TextStyle(color: color5)),
                 ],
+              ),
+              style: ElevatedButton.styleFrom(
+                primary: color1, // 修改按钮背景颜色
               ),
             ),
             const SizedBox(width: 8), // 添加两个按钮之间的空间
@@ -300,11 +318,14 @@ class OrderItemCard extends StatelessWidget {
                   },
                 );
               },
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.delete, color: Colors.white),
-                  Text('删除'),
+                  Icon(Icons.delete, color: color5),
+                  Text('删除', style: TextStyle(color: color5)),
                 ],
+              ),
+              style: ElevatedButton.styleFrom(
+                primary: color1, // 修改按钮背景颜色
               ),
             ),
           ],
@@ -334,32 +355,41 @@ class _OrderDetailsDialog extends StatelessWidget {
           leading: Icon(Icons.fastfood),
           title: Text(
             '$itemName',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: color2), // 修改了菜品名称颜色
           ),
           subtitle: Text(
-              '数量: ${itemDetails['count']}, 价格: ${itemDetails['price']} 元, 是否准备: ${itemDetails['isPrepared'] ? '已准备' : '未准备'}, 是否上桌: ${itemDetails['isServed'] ? '已上桌' : '未上桌'}'),
+            '数量: ${itemDetails['count']}, 价格: ${itemDetails['price']} 元, 是否准备: ${itemDetails['isPrepared'] ? '已准备' : '未准备'}, 是否上桌: ${itemDetails['isServed'] ? '已上桌' : '未上桌'}',
+            style: TextStyle(color: color3), // 修改了菜品详细信息颜色
+          ),
         ),
       );
     }).toList();
 
     return AlertDialog(
-      title: Text('订单详情', style: TextStyle(color: Colors.blue, fontSize: 20)),
+      title: Text('订单详情',
+          style: TextStyle(color: color2, fontSize: 20)), // 修改了对话框标题颜色
       content: SingleChildScrollView(
         child: ListBody(
           children: <Widget>[
-            Text('订单编号: ${order['id']}', style: TextStyle(fontSize: 16)),
-            Text('用户名: ${order['user']}', style: TextStyle(fontSize: 16)),
-            Text('提交时间: ${order['timestamp']}', style: TextStyle(fontSize: 16)),
+            Text('订单编号: ${order['id']}',
+                style: TextStyle(fontSize: 16, color: color3)), // 修改了订单编号颜色
+            Text('用户名: ${order['user']}',
+                style: TextStyle(fontSize: 16, color: color3)), // 修改了用户名颜色
+            Text('提交时间: ${order['timestamp']}',
+                style: TextStyle(fontSize: 16, color: color3)), // 修改了提交时间颜色
             Text('总价: ${order['total']} 元',
-                style: TextStyle(fontSize: 16, color: Colors.red)),
+                style: TextStyle(fontSize: 16, color: Colors.red)), // 总价颜色保持不变
             Text('订单提交: ${order['isSubmitted'] ? '已提交' : '未提交'}',
-                style: TextStyle(fontSize: 16)),
+                style: TextStyle(fontSize: 16, color: color3)), // 修改了订单提交状态颜色
             Text('订单确认: ${order['isConfirmed'] ? '已确认' : '未确认'}',
-                style: TextStyle(fontSize: 16)),
+                style: TextStyle(fontSize: 16, color: color3)), // 修改了订单确认状态颜色
             Text('订单完成: ${order['isCompleted'] ? '已完成' : '未完成'}',
-                style: TextStyle(fontSize: 16)),
+                style: TextStyle(fontSize: 16, color: color3)), // 修改了订单完成状态颜色
             Text('订单支付: ${order['isPaid'] ? '已支付' : '未支付'}',
-                style: TextStyle(fontSize: 16)),
+                style: TextStyle(fontSize: 16, color: color3)), // 修改了订单支付状态颜色
             ...orderItems,
           ],
         ),
@@ -369,7 +399,10 @@ class _OrderDetailsDialog extends StatelessWidget {
           onPressed: () {
             Navigator.of(context).pop();
           },
-          child: Text('关闭'),
+          child: Text('关闭', style: TextStyle(color: color5)), // 修改了按钮文字颜色
+          style: TextButton.styleFrom(
+            primary: color1, // 修改了按钮背景颜色
+          ),
         ),
       ],
     );

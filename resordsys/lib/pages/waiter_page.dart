@@ -26,6 +26,12 @@ class WaiterPage extends StatefulWidget {
 class _WaiterPageState extends State<WaiterPage> {
   List<dynamic> orders = [];
   late Future<pw.Font> _font;
+  // 定义颜色
+  final color1 = Color(0xFF1c595a);
+  final color2 = Color(0xFF458d8c);
+  final color3 = Color(0xFF58a6a6);
+  final color4 = Color(0xFF67734d);
+  final color5 = Color(0xFFd7d8ac);
   @override
   void initState() {
     super.initState();
@@ -90,32 +96,66 @@ class _WaiterPageState extends State<WaiterPage> {
       int id, Map<String, dynamic> order, pw.Font font) async {
     final pw.Document pdf = pw.Document();
 
-    // Get the order data
-    final orderData = _buildOrder(id, order, font);
+    // Calculate the total and get the items data
+    double total = 0;
+    List<pw.Widget> items = [];
+    for (var item in order['items'].entries) {
+      total += item.value['count'] * item.value['price'];
+      items.add(_buildItem(item, font));
+    }
 
-    // Calculate the number of pages
-    final numPages = (orderData.length / 20).ceil();
+    // Add the header
+    List<pw.Widget> header = _buildHeader(id, order, font, total);
 
-    // Generate the pages
+    // Combine the header and the first 9 items for the first page
+    List<pw.Widget> firstPageData = [
+      ...header,
+      pw.SizedBox(height: 20),
+      ...items.take(15)
+    ];
+
+    // Generate the first page
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) => pw.Padding(
+          padding: const pw.EdgeInsets.all(10.0), // Add padding to the page
+          child: pw.Row(
+            children: [
+              pw.Expanded(child: pw.Column(children: firstPageData)),
+              pw.SizedBox(width: 30), // Add a space between the columns
+              pw.Expanded(child: pw.Column(children: firstPageData)),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    // Calculate the number of remaining pages
+    final numPages = ((items.length - 15) / 15).ceil();
+
+    // Generate the remaining pages
     for (var i = 0; i < numPages; i++) {
       // Get the data for this page
-      final pageData = orderData.skip(i * 20).take(20).toList();
+      final pageItems = items.skip(15 + i * 15).take(15).toList();
+
+      // Combine the header and the items for this page
+      List<pw.Widget> pageData = [
+        ...header,
+        pw.SizedBox(height: 20),
+        ...pageItems
+      ];
 
       pdf.addPage(
         pw.Page(
-          build: (pw.Context context) => pw.Row(
-            children: [
-              pw.Expanded(
-                child: pw.Column(
-                  children: pageData,
-                ),
-              ),
-              pw.Expanded(
-                child: pw.Column(
-                  children: pageData,
-                ),
-              ),
-            ],
+          build: (pw.Context context) => pw.Padding(
+            padding: const pw.EdgeInsets.all(10.0), // Add padding to the page
+            child: pw.Row(
+              children: [
+                pw.Expanded(child: pw.Column(children: pageData)),
+                pw.SizedBox(width: 30), // Add a space between the columns
+                pw.Expanded(child: pw.Column(children: pageData)),
+              ],
+            ),
           ),
         ),
       );
@@ -124,23 +164,37 @@ class _WaiterPageState extends State<WaiterPage> {
     return pdf;
   }
 
-  List<pw.Widget> _buildOrder(
-      int id, Map<String, dynamic> order, pw.Font font) {
+  List<pw.Widget> _buildHeader(
+      int id, Map<String, dynamic> order, pw.Font font, double total) {
     return [
-      pw.Text('订单: $id 顾客: ${order['user']}',
+      pw.Text('顾客: ${order['user']}',
           style: pw.TextStyle(fontSize: 40, font: font)),
+      pw.Text('订单编号: $id', style: pw.TextStyle(fontSize: 30, font: font)),
+      pw.Text('订单总价: $total 元', style: pw.TextStyle(fontSize: 20, font: font)),
       pw.SizedBox(height: 20),
-      ..._buildItems(order, font),
+      pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Text('菜品名称', style: pw.TextStyle(fontSize: 20, font: font)),
+          pw.Text('数量', style: pw.TextStyle(fontSize: 20, font: font)),
+          pw.Text('单价', style: pw.TextStyle(fontSize: 20, font: font)),
+        ],
+      ),
+      pw.SizedBox(height: 10),
     ];
   }
 
-  List<pw.Widget> _buildItems(Map<String, dynamic> order, pw.Font font) {
-    return order['items'].entries.map<pw.Widget>((item) {
-      return pw.Text(
-        '${item.value['count']}x${item.key}    ${item.value['price']} 元',
-        style: pw.TextStyle(fontSize: 20, font: font),
-      );
-    }).toList();
+  pw.Widget _buildItem(MapEntry<String, dynamic> item, pw.Font font) {
+    return pw.Row(
+      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+      children: [
+        pw.Text('${item.key}', style: pw.TextStyle(fontSize: 20, font: font)),
+        pw.Text('${item.value['count']}',
+            style: pw.TextStyle(fontSize: 20, font: font)),
+        pw.Text('${item.value['price']} 元',
+            style: pw.TextStyle(fontSize: 20, font: font)),
+      ],
+    );
   }
 
   Future<void> confirmOrder(int id) async {
@@ -193,11 +247,30 @@ class _WaiterPageState extends State<WaiterPage> {
     }
   }
 
+  ButtonStyle _createButtonStyle(Color color) {
+    return ButtonStyle(
+      backgroundColor: MaterialStateProperty.all<Color>(color),
+      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+        RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0),
+          side: BorderSide(color: color),
+        ),
+      ),
+      elevation: MaterialStateProperty.all(10),
+      padding: MaterialStateProperty.all(
+          EdgeInsets.symmetric(horizontal: 30, vertical: 20)), // 增大垂直内边距
+      textStyle: MaterialStateProperty.all(TextStyle(fontSize: 18)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
-        title: Text('服务员'),
+        title: Text('服务员',
+            style: TextStyle(color: color5, fontSize: 20)), // 修改标题颜色和字体大小
+        backgroundColor: color3, // 修改App Bar背景颜色
       ),
       body: ListView.builder(
         itemCount: orders.length,
@@ -234,9 +307,11 @@ class _WaiterPageState extends State<WaiterPage> {
 
                   return ListTile(
                     leading: Icon(icon),
-                    title: Text(item.key),
+                    title: Text(item.key,
+                        style: TextStyle(color: color2)), // 使用 color2
                     subtitle: Text(
-                        '${item.value['count']} x \$${item.value['price']}'),
+                        '${item.value['count']} x \$${item.value['price']}',
+                        style: TextStyle(color: color2)), // 使用 color2
                     trailing: item.value['isPrepared'] &&
                             !item.value['isServed']
                         ? ElevatedButton(
@@ -248,8 +323,8 @@ class _WaiterPageState extends State<WaiterPage> {
                 }).toList(),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal, // 设置滚动方向为水平方向
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  child: Wrap(
+                    alignment: WrapAlignment.spaceEvenly,
                     children: <Widget>[
                       ElevatedButton(
                         onPressed: () {
@@ -262,22 +337,15 @@ class _WaiterPageState extends State<WaiterPage> {
                           });
                         },
                         child: Text('修改订单'),
-                        style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStateProperty.all<Color>(Colors.blue),
-                        ),
+                        style: _createButtonStyle(color1),
                       ),
                       ElevatedButton(
                         onPressed: () => confirmOrder(order['id']),
                         child: Text('确认订单'),
-                        style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStateProperty.all<Color>(Colors.green),
-                        ),
+                        style: _createButtonStyle(color3),
                       ),
                       ElevatedButton(
                         onPressed: () async {
-                          // Use the loaded font to generate the PDF
                           final font = await _font;
                           final pdf =
                               await generateOrderPdf(order['id'], order, font);
@@ -289,10 +357,7 @@ class _WaiterPageState extends State<WaiterPage> {
                           );
                         },
                         child: Text('本地打印'),
-                        style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStateProperty.all<Color>(Colors.purple),
-                        ),
+                        style: _createButtonStyle(color4),
                       ),
                       ElevatedButton(
                         onPressed: () {
@@ -314,7 +379,6 @@ class _WaiterPageState extends State<WaiterPage> {
                                     onPressed: () {
                                       printOrder(order['id'])
                                           .catchError((error) {
-                                        // Handle the error here
                                         print(error);
                                       });
                                       Navigator.of(context).pop();
@@ -326,10 +390,7 @@ class _WaiterPageState extends State<WaiterPage> {
                           );
                         },
                         child: Text('远程打印'),
-                        style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStateProperty.all<Color>(Colors.orange),
-                        ),
+                        style: _createButtonStyle(Colors.orange),
                       ),
                       ElevatedButton(
                         onPressed: () {
@@ -359,33 +420,120 @@ class _WaiterPageState extends State<WaiterPage> {
                           );
                         },
                         child: Text('确认付款'),
-                        style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStateProperty.all<Color>(Colors.red),
-                        ),
+                        style: _createButtonStyle(Colors.red),
                       ),
                     ],
                   ),
                 ),
-                AnimatedCrossFade(
-                  duration: const Duration(milliseconds: 200),
-                  firstChild: const Text('订单状态:已提交/已确认/已完成/已付款'),
-                  secondChild: Text(
-                      '订单状态:${order['isSubmitted'] ? '已提交' : '未提交'} / ${order['isConfirmed'] ? '已确认' : '未确认'} / ${order['isCompleted'] ? '已完成' : '未完成'} / ${order['isPaid'] ? '已付款' : '未付款'}'),
-                  crossFadeState: order['isSubmitted'] &&
-                          order['isConfirmed'] &&
-                          order['isCompleted'] &&
-                          order['isPaid']
-                      ? CrossFadeState.showFirst
-                      : CrossFadeState.showSecond,
+                SizedBox(height: 20), // Increased spacing
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Expanded(
+                      child: AnimatedContainer(
+                        duration: Duration(seconds: 1),
+                        height: screenHeight * 0.08, // Increased height
+                        margin: EdgeInsets.symmetric(
+                            horizontal: 10), // Added horizontal margin
+                        padding: EdgeInsets.all(10.0),
+                        decoration: BoxDecoration(
+                          color: color4, // 使用 color4
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: [
+                            // Added shadow
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.25),
+                              spreadRadius: 0,
+                              blurRadius: 4,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                '订单状态',
+                                style: TextStyle(
+                                  fontSize: screenHeight *
+                                      0.020, // Decreased font size
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            SizedBox(height: 5), // Added spacing
+                            Flexible(
+                              child: Text(
+                                '${order['isSubmitted'] ? '已提交' : '未提交'} / ${order['isConfirmed'] ? '已确认' : '未确认'} / ${order['isCompleted'] ? '已完成' : '未完成'} / ${order['isPaid'] ? '已付款' : '未付款'}',
+                                style: TextStyle(
+                                  fontSize: screenHeight *
+                                      0.012, // Decreased font size
+                                  color: Colors.white,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: AnimatedContainer(
+                        duration: Duration(seconds: 1),
+                        height: screenHeight * 0.08, // Increased height
+                        margin: EdgeInsets.symmetric(
+                            horizontal: 10), // Added horizontal margin
+                        padding: EdgeInsets.all(10.0),
+                        decoration: BoxDecoration(
+                          color: color3, // 使用 color3
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: [
+                            // Added shadow
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.25),
+                              spreadRadius: 0,
+                              blurRadius: 4,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                '订单总额',
+                                style: TextStyle(
+                                  fontSize: screenHeight *
+                                      0.020, // Decreased font size
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            SizedBox(height: 5), // Added spacing
+                            Flexible(
+                              child: Text(
+                                '${order['total']} 元',
+                                style: TextStyle(
+                                  fontSize: screenHeight *
+                                      0.022, // Decreased font size
+                                  color: Colors.white,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                AnimatedContainer(
-                  duration: Duration(seconds: 1),
-                  width: 200.0,
-                  height: 50.0,
-                  padding: EdgeInsets.all(10.0),
-                  child: Text('订单总额: ${order['total']} 元'),
-                ),
+                SizedBox(height: 20), // Increased spacing
               ],
             ),
           );
@@ -393,6 +541,7 @@ class _WaiterPageState extends State<WaiterPage> {
       ),
       bottomNavigationBar: BottomAppBar(
         shape: CircularNotchedRectangle(),
+        color: color3, // 使用 color3
         child: Container(
           height: 60.0,
           child: Row(
@@ -411,11 +560,12 @@ class _WaiterPageState extends State<WaiterPage> {
                   },
                   child: Text('订单管理'),
                   style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all(Colors.blue),
+                    backgroundColor:
+                        MaterialStateProperty.all(color1), // 使用 color1
                     shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                       RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18.0),
-                        side: BorderSide(color: Colors.blue),
+                        side: BorderSide(color: color1), // 使用 color1
                       ),
                     ),
                   ),
@@ -434,11 +584,12 @@ class _WaiterPageState extends State<WaiterPage> {
                   },
                   child: Text('帮忙点菜'),
                   style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all(Colors.blue),
+                    backgroundColor:
+                        MaterialStateProperty.all(color5), // 使用 color5
                     shape: MaterialStateProperty.all<RoundedRectangleBorder>(
                       RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(18.0),
-                        side: BorderSide(color: Colors.blue),
+                        side: BorderSide(color: color5), // 使用 color5
                       ),
                     ),
                   ),

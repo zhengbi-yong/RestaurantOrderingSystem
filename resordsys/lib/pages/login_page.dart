@@ -25,6 +25,13 @@ class _LoginPageState extends State<LoginPage> {
   late final _passwordController;
   String dropdownValue = '顾客';
 
+  // 定义颜色
+  final color1 = Color(0xFF1c595a);
+  final color2 = Color(0xFF458d8c);
+  final color3 = Color(0xFF58a6a6);
+  final color4 = Color(0xFF67734d);
+  final color5 = Color(0xFFd7d8ac);
+
   @override
   void initState() {
     super.initState();
@@ -78,7 +85,7 @@ class _LoginPageState extends State<LoginPage> {
     if (response.statusCode == 200) {
       log('登录成功');
       String identity = dropdownValue;
-      globalUser = "$username@${DateTime.now().toIso8601String()}";
+      globalUser = "$username";
       switch (identity) {
         case '顾客':
           Navigator.pushNamed(context, '/customer_page');
@@ -137,6 +144,7 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('登录'),
+        backgroundColor: color3, // 修改背景颜色
       ),
       body: Padding(
         padding: EdgeInsets.all(16.0),
@@ -158,13 +166,14 @@ class _LoginPageState extends State<LoginPage> {
                   child: Text(value),
                 );
               }).toList(),
+              dropdownColor: color5, // 修改下拉菜单颜色
             ),
             TextField(
               controller: _usernameController,
               decoration: InputDecoration(
                 hintText: '用户名',
                 filled: true,
-                fillColor: Colors.grey[200],
+                fillColor: color2, // 修改填充颜色
               ),
             ),
             SizedBox(height: 10),
@@ -173,15 +182,13 @@ class _LoginPageState extends State<LoginPage> {
               decoration: InputDecoration(
                 hintText: '密码',
                 filled: true,
-                fillColor: Colors.grey[200],
+                fillColor: color2, // 修改填充颜色
               ),
               obscureText: true,
             ),
             SizedBox(height: 20),
-            AnimatedContainer(
-              duration: Duration(seconds: 2),
-              curve: Curves.easeIn,
-              width: 200,
+            Container(
+              width: double.infinity,
               height: 50,
               child: ElevatedButton(
                 onPressed: () {
@@ -189,20 +196,16 @@ class _LoginPageState extends State<LoginPage> {
                 },
                 child: Text('登录'),
                 style: ElevatedButton.styleFrom(
-                  primary: Color.fromARGB(255, 11, 84, 124),
+                  primary: color1,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  elevation: 10,
-                  shadowColor: Colors.grey,
                 ),
               ),
             ),
             SizedBox(height: 10),
-            AnimatedContainer(
-              duration: Duration(seconds: 2),
-              curve: Curves.easeIn,
-              width: 200,
+            Container(
+              width: double.infinity,
               height: 50,
               child: ElevatedButton(
                 onPressed: () {
@@ -213,12 +216,10 @@ class _LoginPageState extends State<LoginPage> {
                 },
                 child: Text('注册'),
                 style: ElevatedButton.styleFrom(
-                  primary: const Color.fromARGB(255, 52, 18, 112),
+                  primary: color4,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  elevation: 10,
-                  shadowColor: Colors.grey,
                 ),
               ),
             ),

@@ -22,6 +22,13 @@ class _CustomerPageState extends State<CustomerPage> {
   TextEditingController nameController = TextEditingController();
   TextEditingController priceController = TextEditingController();
 
+  // 定义颜色
+  final color1 = Color(0xFF1c595a);
+  final color2 = Color(0xFF458d8c);
+  final color3 = Color(0xFF58a6a6);
+  final color4 = Color(0xFF67734d);
+  final color5 = Color(0xFFd7d8ac);
+
   @override
   void initState() {
     super.initState();
@@ -88,8 +95,8 @@ class _CustomerPageState extends State<CustomerPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('海底世界海景餐厅',
-            style: TextStyle(color: Colors.white, fontSize: 20)), // 修改标题颜色和字体大小
-        backgroundColor: Colors.blue, // 修改App Bar背景颜色
+            style: TextStyle(color: color5, fontSize: 20)), // 修改标题颜色和字体大小
+        backgroundColor: color3, // 修改App Bar背景颜色
       ),
       body: ListView.builder(
         itemCount: groupedMenuItems.keys.length,
@@ -103,21 +110,23 @@ class _CustomerPageState extends State<CustomerPage> {
               style: TextStyle(
                 fontSize: 18.0,
                 fontWeight: FontWeight.bold,
-                color: Colors.deepPurple, // 类别名颜色修改为深紫色
+                color: color1, // 类别名颜色修改为color1
               ),
             ),
             children: categoryMenuItems.map((menuItem) {
               final orderCount = orderItems[menuItem['name']] ?? 0;
               return ListTile(
                 title: Text(menuItem['name'],
-                    style: TextStyle(fontSize: 16)), // 修改菜名字体大小
+                    style:
+                        TextStyle(fontSize: 16, color: color2)), // 修改菜名字体大小和颜色
                 subtitle: Text('${menuItem['price']} 元',
-                    style: TextStyle(fontSize: 14)), // 修改价格字体大小
+                    style:
+                        TextStyle(fontSize: 14, color: color2)), // 修改价格字体大小和颜色
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: Icon(Icons.remove, color: Colors.red), // 修改减号颜色为红色
+                      icon: Icon(Icons.remove, color: color1), // 修改减号颜色为color1
                       onPressed: () {
                         if (orderCount > 0) {
                           setState(() {
@@ -131,9 +140,10 @@ class _CustomerPageState extends State<CustomerPage> {
                       },
                     ),
                     Text('$orderCount',
-                        style: TextStyle(fontSize: 16)), // 修改数量字体大小
+                        style: TextStyle(
+                            fontSize: 16, color: color2)), // 修改数量字体大小和颜色
                     IconButton(
-                      icon: Icon(Icons.add, color: Colors.green), // 修改加号颜色为绿色
+                      icon: Icon(Icons.add, color: color1), // 修改加号颜色为color1
                       onPressed: () {
                         setState(() {
                           orderItems[menuItem['name']] = orderCount + 1;
@@ -149,7 +159,7 @@ class _CustomerPageState extends State<CustomerPage> {
       ),
       bottomNavigationBar: BottomAppBar(
         shape: CircularNotchedRectangle(),
-        color: Colors.blue, // 修改BottomAppBar颜色为蓝色
+        color: color3, // 修改BottomAppBar颜色为color3
         child: Container(height: 60.0),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -161,8 +171,8 @@ class _CustomerPageState extends State<CustomerPage> {
                 builder: (context) => ShoppingCartPage(orderItems, menuItems)),
           );
         },
-        child: Icon(Icons.shopping_cart),
-        backgroundColor: Colors.orange, // 修改浮动操作按钮的背景颜色
+        child: Icon(Icons.shopping_cart, color: color5), // 修改图标颜色为color5
+        backgroundColor: color1, // 修改浮动操作按钮的背景颜色为color1
       ),
     );
   }

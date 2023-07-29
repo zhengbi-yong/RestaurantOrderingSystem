@@ -21,7 +21,6 @@ class User(db.Model):
             "id": self.id,
             "username": self.username,
             "identity": self.identity,
-            # include any other fields you want
         }
 
 

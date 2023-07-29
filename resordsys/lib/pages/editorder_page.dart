@@ -17,6 +17,13 @@ class _EditOrderPageState extends State<EditOrderPage> {
   List<dynamic> menuItems = [];
   TextEditingController userController = TextEditingController();
 
+  // 定义颜色
+  final color1 = Color(0xFF1c595a);
+  final color2 = Color(0xFF458d8c);
+  final color3 = Color(0xFF58a6a6);
+  final color4 = Color(0xFF67734d);
+  final color5 = Color(0xFFd7d8ac);
+
   @override
   void initState() {
     super.initState();
@@ -79,9 +86,8 @@ class _EditOrderPageState extends State<EditOrderPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title:
-            Text('修改订单', style: TextStyle(color: Colors.white, fontSize: 20)),
-        backgroundColor: Colors.orange,
+        title: Text('修改订单', style: TextStyle(color: color5, fontSize: 20)),
+        backgroundColor: color3,
       ),
       body: ListView(
         children: <Widget>[
@@ -92,7 +98,7 @@ class _EditOrderPageState extends State<EditOrderPage> {
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: '用户',
-                labelStyle: TextStyle(fontSize: 18),
+                labelStyle: TextStyle(fontSize: 18, color: color2),
               ),
             ),
           ),
@@ -115,7 +121,7 @@ class _EditOrderPageState extends State<EditOrderPage> {
                   style: TextStyle(
                     fontSize: 18.0,
                     fontWeight: FontWeight.bold,
-                    color: Colors.deepPurple,
+                    color: color1,
                   ),
                 ),
                 children: categoryMenuItems.map((menuItem) {
@@ -129,15 +135,15 @@ class _EditOrderPageState extends State<EditOrderPage> {
                     order['items'][menuItem['name']] = orderItem;
                   }
                   return ListTile(
-                    title:
-                        Text(menuItem['name'], style: TextStyle(fontSize: 16)),
+                    title: Text(menuItem['name'],
+                        style: TextStyle(fontSize: 16, color: color2)),
                     subtitle: Text('${menuItem['price']} 元',
-                        style: TextStyle(fontSize: 14)),
+                        style: TextStyle(fontSize: 14, color: color2)),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.remove, color: Colors.red),
+                          icon: Icon(Icons.remove, color: color1),
                           onPressed: () {
                             if (orderItem['count'] > 0) {
                               setState(() {
@@ -147,9 +153,9 @@ class _EditOrderPageState extends State<EditOrderPage> {
                           },
                         ),
                         Text('${orderItem['count']}',
-                            style: TextStyle(fontSize: 16)),
+                            style: TextStyle(fontSize: 16, color: color2)),
                         IconButton(
-                          icon: Icon(Icons.add, color: Colors.green),
+                          icon: Icon(Icons.add, color: color1),
                           onPressed: () {
                             setState(() {
                               orderItem['count']++;
@@ -167,14 +173,15 @@ class _EditOrderPageState extends State<EditOrderPage> {
       ),
       bottomNavigationBar: BottomAppBar(
         shape: CircularNotchedRectangle(),
+        color: color3, // 修改BottomAppBar颜色为color3
         child: Container(height: 60.0),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(
         onPressed: modifyOrder,
-        child: Icon(Icons.check),
+        child: Icon(Icons.check, color: color5),
         tooltip: '确认修改',
-        backgroundColor: Colors.orange,
+        backgroundColor: color1, // 修改浮动操作按钮的背景颜色为color1
       ),
     );
   }

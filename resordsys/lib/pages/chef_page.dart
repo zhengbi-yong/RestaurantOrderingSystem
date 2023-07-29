@@ -19,6 +19,11 @@ class ChefPage extends StatefulWidget {
 
 class _ChefPageState extends State<ChefPage> {
   List<dynamic> orders = [];
+  final color1 = Color(0xFF1c595a);
+  final color2 = Color(0xFF458d8c);
+  final color3 = Color(0xFF58a6a6);
+  final color4 = Color(0xFF67734d);
+  final color5 = Color(0xFFd7d8ac);
 
   @override
   void initState() {
@@ -76,8 +81,9 @@ class _ChefPageState extends State<ChefPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('厨师', style: TextStyle(color: Colors.white, fontSize: 20)),
-        backgroundColor: Colors.blue,
+        title: Text('厨师',
+            style: TextStyle(color: color5, fontSize: 20)), // 修改了标题颜色
+        backgroundColor: color3, // 修改了背景颜色
       ),
       body: ListView.builder(
         itemCount: orders.length,
@@ -99,28 +105,37 @@ class _ChefPageState extends State<ChefPage> {
             color: Colors.transparent,
             child: ExpansionTile(
               title: Text('${order['user']} 的订单',
-                  style:
-                      TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold)),
+                  style: TextStyle(
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.bold,
+                      color: color2)), // 修改了订单标题颜色
               children: order['items'].entries.map<Widget>((itemEntry) {
                 var itemName = itemEntry.key;
                 var itemDetails = itemEntry.value;
                 Color backgroundColor = itemDetails['isPrepared']
-                    ? Colors.green.withOpacity(0.5)
-                    : Colors.red.withOpacity(0.5);
+                    ? color4.withOpacity(0.5) // 修改了已备菜的背景颜色
+                    : color1.withOpacity(0.5); // 修改了未备菜的背景颜色
                 return Container(
                   color: backgroundColor,
                   child: Card(
                     child: ListTile(
-                      title: Text(itemName, style: TextStyle(fontSize: 16)),
+                      title: Text(itemName,
+                          style: TextStyle(
+                              fontSize: 16, color: color3)), // 修改了菜品名称颜色
                       subtitle: Text(itemDetails['isPrepared'] ? '已备菜' : '未备菜',
-                          style: TextStyle(fontSize: 14)),
+                          style: TextStyle(
+                              fontSize: 14, color: color5)), // 修改了备菜状态颜色
                       trailing: !itemDetails['isPrepared']
                           ? ElevatedButton(
                               onPressed: () async {
                                 await completeOrderItem(order['id'], itemName);
                                 fetchOrders();
                               },
-                              child: Text('出菜'),
+                              child: Text('出菜',
+                                  style: TextStyle(color: color5)), // 修改了按钮文字颜色
+                              style: ElevatedButton.styleFrom(
+                                primary: color1, // 修改了按钮背景颜色
+                              ),
                             )
                           : null,
                     ),
@@ -132,21 +147,39 @@ class _ChefPageState extends State<ChefPage> {
         },
       ),
       bottomNavigationBar: BottomAppBar(
-        color: Colors.blue,
-        child: Row(
-          children: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => MenuItemManagePage()),
-                );
-              },
-              child: Text('菜品管理', style: TextStyle(color: Colors.white)),
-              style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all(Colors.orange)),
-            ),
-          ],
+        shape: CircularNotchedRectangle(),
+        color: color3, // 使用 color3
+        child: Container(
+          height: 60.0,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Container(
+                height: 50,
+                width: 120,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => MenuItemManagePage()),
+                    );
+                  },
+                  child: Text('菜品管理'),
+                  style: ButtonStyle(
+                    backgroundColor:
+                        MaterialStateProperty.all(color1), // 使用 color1
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18.0),
+                        side: BorderSide(color: color1), // 使用 color1
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

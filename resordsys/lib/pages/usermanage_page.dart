@@ -18,6 +18,11 @@ class UserManagePage extends StatefulWidget {
 
 class _UserManagePageState extends State<UserManagePage> {
   late Future<List> futureUsers;
+  final color1 = Color(0xFF1c595a);
+  final color2 = Color(0xFF458d8c);
+  final color3 = Color(0xFF58a6a6);
+  final color4 = Color(0xFF67734d);
+  final color5 = Color(0xFFd7d8ac);
 
   @override
   void initState() {
@@ -47,7 +52,8 @@ class _UserManagePageState extends State<UserManagePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('用户管理'),
+        title: Text('用户管理', style: TextStyle(color: color5, fontSize: 20)),
+        backgroundColor: color3,
       ),
       body: FutureBuilder<List>(
         future: futureUsers,
@@ -58,39 +64,44 @@ class _UserManagePageState extends State<UserManagePage> {
               itemBuilder: (context, index) {
                 var user = snapshot.data![index];
                 return Card(
+                  color: color3.withOpacity(0.5),
                   child: ListTile(
                     leading: CircleAvatar(
-                      // If you have a user image, use NetworkImage. If not, you can use placeholder image
-                      // backgroundImage: NetworkImage(user['imageUrl']),
+                      backgroundColor: color3,
                       child: Text(
-                        user['username'][0]
-                            .toUpperCase(), // display the first letter of the username
-                        style: TextStyle(fontSize: 24.0),
+                        user['username'][0].toUpperCase(),
+                        style: TextStyle(fontSize: 24.0, color: color5),
                       ),
                     ),
-                    title: Text(user['username']),
-                    subtitle: Text(
-                        'Additional User Info'), // You can add more user info here
+                    title: Text(user['username'],
+                        style: TextStyle(color: color5, fontSize: 16)),
+                    subtitle: Text('Additional User Info',
+                        style: TextStyle(color: color4, fontSize: 14)),
                     trailing: IconButton(
                       icon: Icon(Icons.delete),
-                      color: Colors.red,
+                      color: color4,
                       onPressed: () {
                         showDialog(
                           context: context,
                           builder: (BuildContext context) {
                             return AlertDialog(
-                              title: Text('Confirm'),
-                              content: Text(
-                                  'Are you sure you want to delete ${user['username']}?'),
+                              title: Text('确认',
+                                  style:
+                                      TextStyle(color: color2, fontSize: 20)),
+                              content: Text('您确定要删除 ${user['username']}？',
+                                  style:
+                                      TextStyle(color: color4, fontSize: 16)),
                               actions: <Widget>[
                                 TextButton(
-                                  child: Text('Cancel'),
+                                  child: Text('取消',
+                                      style: TextStyle(color: color2)),
                                   onPressed: () {
                                     Navigator.of(context).pop();
                                   },
                                 ),
                                 TextButton(
-                                  child: Text('Delete'),
+                                  child: Text('删除',
+                                      style: TextStyle(color: color2)),
                                   onPressed: () async {
                                     await deleteUser(user['id']);
                                     setState(() {

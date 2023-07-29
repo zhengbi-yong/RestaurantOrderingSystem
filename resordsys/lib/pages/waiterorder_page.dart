@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:developer' as developer;
-import 'package:socket_io_client/socket_io_client.dart' as IO;
 import '../config.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 void log(String message) {
   developer.log(message, name: 'WaiterOrderPage');
@@ -18,6 +18,13 @@ class _WaiterOrderPageState extends State<WaiterOrderPage> {
   List<dynamic> menuItems = [];
   Map<String, int> orderItems = {};
   TextEditingController nameController = TextEditingController();
+
+  // 定义颜色
+  final color1 = Color(0xFF1c595a);
+  final color2 = Color(0xFF458d8c);
+  final color3 = Color(0xFF58a6a6);
+  final color4 = Color(0xFF67734d);
+  final color5 = Color(0xFFd7d8ac);
 
   @override
   void initState() {
@@ -90,7 +97,9 @@ class _WaiterOrderPageState extends State<WaiterOrderPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('服务员帮忙点菜'),
+        title: Text('服务员帮忙点菜',
+            style: TextStyle(color: color5, fontSize: 20)), // 修改标题颜色和字体大小
+        backgroundColor: color3, // 修改App Bar背景颜色
       ),
       body: Column(
         children: <Widget>[
@@ -119,7 +128,7 @@ class _WaiterOrderPageState extends State<WaiterOrderPage> {
                     style: TextStyle(
                       fontSize: 18.0,
                       fontWeight: FontWeight.bold,
-                      color: Colors.blue,
+                      color: color1, // 类别名颜色修改为color1
                     ),
                   ),
                   children: categoryMenuItems.map((menuItem) {
@@ -133,15 +142,17 @@ class _WaiterOrderPageState extends State<WaiterOrderPage> {
                         title: Text(
                           menuItem['name'],
                           style: TextStyle(
-                            color: orderCount > 0 ? Colors.green : Colors.black,
+                            color: orderCount > 0 ? color4 : color2, // 修改菜品名称颜色
                           ),
                         ),
-                        subtitle: Text('${menuItem['price']} 元'),
+                        subtitle: Text('${menuItem['price']} 元',
+                            style: TextStyle(color: color2)), // 修改价格颜色
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              icon: Icon(Icons.remove),
+                              icon: Icon(Icons.remove,
+                                  color: color1), // 修改减号颜色为color1
                               onPressed: () {
                                 if (orderCount > 0) {
                                   setState(() {
@@ -155,9 +166,11 @@ class _WaiterOrderPageState extends State<WaiterOrderPage> {
                                 }
                               },
                             ),
-                            Text('$orderCount'),
+                            Text('$orderCount',
+                                style: TextStyle(color: color2)), // 修改数量颜色
                             IconButton(
-                              icon: Icon(Icons.add),
+                              icon: Icon(Icons.add,
+                                  color: color1), // 修改加号颜色为color1
                               onPressed: () {
                                 setState(() {
                                   orderItems[menuItem['name']] = orderCount + 1;
@@ -177,15 +190,16 @@ class _WaiterOrderPageState extends State<WaiterOrderPage> {
       ),
       bottomNavigationBar: BottomAppBar(
         shape: CircularNotchedRectangle(),
+        color: color3, // 修改BottomAppBar颜色为color3
         child: Container(height: 60.0),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: () {
           submitOrder(nameController.text, total);
         },
-        icon: Icon(Icons.check),
-        label: Text('提交订单: $total 元'),
+        child: Icon(Icons.check, color: color5), // 修改图标颜色为color5
+        backgroundColor: color1, // 修改浮动操作按钮的背景颜色为color1
       ),
     );
   }

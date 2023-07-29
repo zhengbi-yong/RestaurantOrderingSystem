@@ -25,6 +25,12 @@ class _BossPageState extends State<BossPage> {
   int menuItemCount = 0;
   int orderCount = 0;
 
+  final color1 = Color(0xFF1c595a);
+  final color2 = Color(0xFF458d8c);
+  final color3 = Color(0xFF58a6a6);
+  final color4 = Color(0xFF67734d);
+  final color5 = Color(0xFFd7d8ac);
+
   @override
   void initState() {
     super.initState();
@@ -70,8 +76,8 @@ class _BossPageState extends State<BossPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('老板'),
-        backgroundColor: Colors.deepOrange, // 设置AppBar的颜色
+        title: Text('老板', style: TextStyle(color: color5, fontSize: 20)),
+        backgroundColor: color3,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -79,27 +85,31 @@ class _BossPageState extends State<BossPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('当天营业额: ${totalRevenue.toStringAsFixed(0)} 元',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            SizedBox(height: 10), // 添加一些间距
-            Text('员工人数: $employeeCount', style: TextStyle(fontSize: 18)),
-            SizedBox(height: 10), // 添加一些间距
-            Text('菜品数量: $menuItemCount', style: TextStyle(fontSize: 18)),
-            SizedBox(height: 10), // 添加一些间距
-            Text('订单数量: $orderCount', style: TextStyle(fontSize: 18)),
+                style: TextStyle(
+                    fontSize: 20, fontWeight: FontWeight.bold, color: color2)),
+            SizedBox(height: 10),
+            Text('员工人数: $employeeCount',
+                style: TextStyle(fontSize: 18, color: color2)),
+            SizedBox(height: 10),
+            Text('菜品数量: $menuItemCount',
+                style: TextStyle(fontSize: 18, color: color2)),
+            SizedBox(height: 10),
+            Text('订单数量: $orderCount',
+                style: TextStyle(fontSize: 18, color: color2)),
           ],
         ),
       ),
       bottomNavigationBar: BottomAppBar(
         shape: CircularNotchedRectangle(),
+        color: color3,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround, // 设置按钮之间的间距
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              buildButton(
-                  context, '菜品管理', Colors.deepOrange, MenuItemManagePage()),
-              buildButton(context, '用户管理', Colors.deepPurple, UserManagePage()),
-              buildButton(context, '订单管理', Colors.blue, OrderManagePage()),
+              buildButton(context, '菜品管理', MenuItemManagePage()),
+              buildButton(context, '用户管理', UserManagePage()),
+              buildButton(context, '订单管理', OrderManagePage()),
             ],
           ),
         ),
@@ -107,25 +117,28 @@ class _BossPageState extends State<BossPage> {
     );
   }
 
-  Widget buildButton(
-      BuildContext context, String title, Color color, Widget page) {
-    return ElevatedButton(
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => page),
-        );
-      },
-      child: Text(title),
-      style: ButtonStyle(
-        backgroundColor: MaterialStateProperty.all(color),
-        shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-            RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18.0),
-                side: BorderSide(color: color))),
-        shadowColor:
-            MaterialStateProperty.all<Color>(Colors.grey.withOpacity(0.5)),
-        elevation: MaterialStateProperty.all<double>(5),
+  Widget buildButton(BuildContext context, String title, Widget page) {
+    return Container(
+      height: 50,
+      width: 120,
+      child: ElevatedButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => page),
+          );
+        },
+        child: Text(title, style: TextStyle(color: color5)),
+        style: ButtonStyle(
+          backgroundColor: MaterialStateProperty.all(color1),
+          shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+              RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18.0),
+                  side: BorderSide(color: color1))),
+          shadowColor:
+              MaterialStateProperty.all<Color>(color1.withOpacity(0.5)),
+          elevation: MaterialStateProperty.all<double>(5),
+        ),
       ),
     );
   }
