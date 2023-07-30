@@ -18,9 +18,10 @@ class CustomerPage extends StatefulWidget {
 
 class _CustomerPageState extends State<CustomerPage> {
   List<dynamic> menuItems = [];
-  Map<String, int> orderItems = {};
+  Map<String, double> orderItems = {};
   TextEditingController nameController = TextEditingController();
   TextEditingController priceController = TextEditingController();
+  Map<String, TextEditingController> controllers = {};
 
   // 定义颜色
   final color1 = Color(0xFF1c595a);
@@ -33,15 +34,11 @@ class _CustomerPageState extends State<CustomerPage> {
   void initState() {
     super.initState();
     fetchMenu();
-    // 初始化socket连接
     socket = IO.io('${Config.API_URL}', <String, dynamic>{
       'transports': ['websocket'],
       'autoConnect': false,
     });
-
-    // 连接到服务器
     socket?.connect();
-
     socket?.on('new menuitem', (_) {
       fetchMenu();
     });
@@ -114,7 +111,24 @@ class _CustomerPageState extends State<CustomerPage> {
               ),
             ),
             children: categoryMenuItems.map((menuItem) {
-              final orderCount = orderItems[menuItem['name']] ?? 0;
+              final orderCount = orderItems[menuItem['name']] ?? 0.0;
+              if (controllers[menuItem['name']] == null) {
+                controllers[menuItem['name']] =
+                    TextEditingController(text: orderCount.toStringAsFixed(2));
+                controllers[menuItem['name']]?.addListener(() {
+                  double newCount = double.tryParse(
+                          controllers[menuItem['name']]?.text ?? '0') ??
+                      0.0;
+                  if (newCount == 0.0) {
+                    orderItems.remove(menuItem['name']);
+                  } else {
+                    orderItems[menuItem['name']] = newCount;
+                  }
+                });
+              } else {
+                controllers[menuItem['name']]?.text =
+                    orderCount.toStringAsFixed(2);
+              }
               return ListTile(
                 title: Text(menuItem['name'],
                     style:
@@ -130,23 +144,28 @@ class _CustomerPageState extends State<CustomerPage> {
                       onPressed: () {
                         if (orderCount > 0) {
                           setState(() {
-                            if (orderCount - 1 == 0) {
+                            if (orderCount - 1.0 == 0) {
                               orderItems.remove(menuItem['name']);
                             } else {
-                              orderItems[menuItem['name']] = orderCount - 1;
+                              orderItems[menuItem['name']] = orderCount - 1.0;
                             }
                           });
                         }
                       },
                     ),
-                    Text('$orderCount',
-                        style: TextStyle(
-                            fontSize: 16, color: color2)), // 修改数量字体大小和颜色
+                    SizedBox(
+                      width: 50,
+                      child: TextField(
+                        keyboardType:
+                            TextInputType.numberWithOptions(decimal: true),
+                        controller: controllers[menuItem['name']],
+                      ),
+                    ),
                     IconButton(
                       icon: Icon(Icons.add, color: color1), // 修改加号颜色为color1
                       onPressed: () {
                         setState(() {
-                          orderItems[menuItem['name']] = orderCount + 1;
+                          orderItems[menuItem['name']] = orderCount + 1.0;
                         });
                       },
                     ),

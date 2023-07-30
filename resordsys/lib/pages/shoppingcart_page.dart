@@ -10,7 +10,7 @@ void log(String message) {
 }
 
 class ShoppingCartPage extends StatelessWidget {
-  final Map<String, int> orderItems;
+  final Map<String, double> orderItems; // Change from int to double
   final List<dynamic> menuItems;
 
   // 定义颜色

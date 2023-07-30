@@ -16,7 +16,8 @@ class WaiterOrderPage extends StatefulWidget {
 
 class _WaiterOrderPageState extends State<WaiterOrderPage> {
   List<dynamic> menuItems = [];
-  Map<String, int> orderItems = {};
+  Map<String, double> orderItems = {};
+  Map<String, TextEditingController> controllers = {};
   TextEditingController nameController = TextEditingController();
 
   // 定义颜色
@@ -30,6 +31,13 @@ class _WaiterOrderPageState extends State<WaiterOrderPage> {
   void initState() {
     super.initState();
     fetchMenu();
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    controllers.forEach((key, controller) => controller.dispose());
+    super.dispose();
   }
 
   Future<void> fetchMenu() async {
@@ -89,7 +97,7 @@ class _WaiterOrderPageState extends State<WaiterOrderPage> {
 
     double total = orderItems.entries.fold(0, (sum, entry) {
       String name = entry.key;
-      int count = entry.value;
+      double count = entry.value;
       double price =
           menuItems.firstWhere((item) => item['name'] == name)['price'];
       return sum + price * count;
@@ -132,7 +140,24 @@ class _WaiterOrderPageState extends State<WaiterOrderPage> {
                     ),
                   ),
                   children: categoryMenuItems.map((menuItem) {
-                    final orderCount = orderItems[menuItem['name']] ?? 0;
+                    final orderCount = orderItems[menuItem['name']] ?? 0.0;
+                    if (controllers[menuItem['name']] == null) {
+                      controllers[menuItem['name']] = TextEditingController(
+                          text: orderCount.toStringAsFixed(2));
+                      controllers[menuItem['name']]?.addListener(() {
+                        double newCount = double.tryParse(
+                                controllers[menuItem['name']]?.text ?? '0') ??
+                            0.0;
+                        if (newCount == 0.0) {
+                          orderItems.remove(menuItem['name']);
+                        } else {
+                          orderItems[menuItem['name']] = newCount;
+                        }
+                      });
+                    } else {
+                      controllers[menuItem['name']]?.text =
+                          orderCount.toStringAsFixed(2);
+                    }
                     return Card(
                       elevation: 5.0,
                       shape: RoundedRectangleBorder(
@@ -156,24 +181,31 @@ class _WaiterOrderPageState extends State<WaiterOrderPage> {
                               onPressed: () {
                                 if (orderCount > 0) {
                                   setState(() {
-                                    if (orderCount - 1 == 0) {
+                                    if (orderCount - 1.0 == 0) {
                                       orderItems.remove(menuItem['name']);
                                     } else {
                                       orderItems[menuItem['name']] =
-                                          orderCount - 1;
+                                          orderCount - 1.0;
                                     }
                                   });
                                 }
                               },
                             ),
-                            Text('$orderCount',
-                                style: TextStyle(color: color2)), // 修改数量颜色
+                            SizedBox(
+                              width: 50,
+                              child: TextField(
+                                keyboardType: TextInputType.numberWithOptions(
+                                    decimal: true),
+                                controller: controllers[menuItem['name']],
+                              ),
+                            ),
                             IconButton(
                               icon: Icon(Icons.add,
                                   color: color1), // 修改加号颜色为color1
                               onPressed: () {
                                 setState(() {
-                                  orderItems[menuItem['name']] = orderCount + 1;
+                                  orderItems[menuItem['name']] =
+                                      orderCount + 1.0;
                                 });
                               },
                             ),
@@ -196,6 +228,13 @@ class _WaiterOrderPageState extends State<WaiterOrderPage> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+          double total = orderItems.entries.fold(0, (sum, entry) {
+            String name = entry.key;
+            double count = entry.value;
+            double price =
+                menuItems.firstWhere((item) => item['name'] == name)['price'];
+            return sum + price * count;
+          });
           submitOrder(nameController.text, total);
         },
         child: Icon(Icons.check, color: color5), // 修改图标颜色为color5

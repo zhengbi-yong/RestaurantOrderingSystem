@@ -16,6 +16,7 @@ class _EditOrderPageState extends State<EditOrderPage> {
   late Map<String, dynamic> order;
   List<dynamic> menuItems = [];
   TextEditingController userController = TextEditingController();
+  Map<String, TextEditingController> controllers = {};
 
   // 定义颜色
   final color1 = Color(0xFF1c595a);
@@ -30,6 +31,25 @@ class _EditOrderPageState extends State<EditOrderPage> {
     order = Map<String, dynamic>.from(widget.initialOrder);
     userController.text = order['user'];
     fetchMenu();
+    order['items'].forEach((name, item) {
+      controllers[name] = TextEditingController(text: item['count'].toString());
+      controllers[name]?.addListener(() {
+        double newCount =
+            double.tryParse(controllers[name]?.text ?? '0') ?? 0.0;
+        if (newCount == 0.0) {
+          order['items'].remove(name);
+        } else {
+          order['items'][name]['count'] = newCount;
+        }
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    userController.dispose();
+    controllers.forEach((key, controller) => controller.dispose());
+    super.dispose();
   }
 
   Future<void> fetchMenu() async {
@@ -134,6 +154,30 @@ class _EditOrderPageState extends State<EditOrderPage> {
                     };
                     order['items'][menuItem['name']] = orderItem;
                   }
+                  if (!controllers.containsKey(menuItem['name'])) {
+                    controllers[menuItem['name']] = TextEditingController(
+                        text: orderItem['count'].toStringAsFixed(2));
+                    controllers[menuItem['name']]?.addListener(() {
+                      double newCount = double.tryParse(
+                              controllers[menuItem['name']]?.text ?? '0') ??
+                          0.0;
+                      if (newCount == 0.0) {
+                        order['items'].remove(menuItem['name']);
+                      } else {
+                        if (order['items'][menuItem['name']] == null) {
+                          order['items'][menuItem['name']] = {
+                            'count': 0,
+                            'isPrepared': false,
+                            'isServed': false
+                          };
+                        }
+                        order['items'][menuItem['name']]['count'] = newCount;
+                      }
+                    });
+                  } else {
+                    controllers[menuItem['name']]?.text =
+                        orderItem['count'].toStringAsFixed(2);
+                  }
                   return ListTile(
                     title: Text(menuItem['name'],
                         style: TextStyle(fontSize: 16, color: color2)),
@@ -148,17 +192,27 @@ class _EditOrderPageState extends State<EditOrderPage> {
                             if (orderItem['count'] > 0) {
                               setState(() {
                                 orderItem['count']--;
+                                controllers[menuItem['name']]?.text =
+                                    orderItem['count'].toStringAsFixed(2);
                               });
                             }
                           },
                         ),
-                        Text('${orderItem['count']}',
-                            style: TextStyle(fontSize: 16, color: color2)),
+                        SizedBox(
+                          width: 50,
+                          child: TextField(
+                            keyboardType:
+                                TextInputType.numberWithOptions(decimal: true),
+                            controller: controllers[menuItem['name']],
+                          ),
+                        ),
                         IconButton(
                           icon: Icon(Icons.add, color: color1),
                           onPressed: () {
                             setState(() {
                               orderItem['count']++;
+                              controllers[menuItem['name']]?.text =
+                                  orderItem['count'].toStringAsFixed(2);
                             });
                           },
                         ),
